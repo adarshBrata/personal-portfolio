@@ -1,0 +1,24 @@
+---
+import { TITLE } from '../constants'
+import { NavBar } from "../Components/NavBar";
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{TITLE}</title>
+</head>
+<body class="bg-zinc-900 text-zinc-300">
+    <main class="grid grid-cols-1 grid-rows-[150px,_1fr]">
+        <section id="navbar">
+            <NavBar client:load/>
+        </section>
+        <section id="body">
+            <slot/>
+        </section>
+    </main>
+</body>
+</html>
