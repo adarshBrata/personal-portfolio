@@ -4,31 +4,35 @@ import {useMediaQuery} from "../util/useMediaQuery";
 import {useState} from "react";
 
 export const NavBar = () => {
-    const matches = useMediaQuery('(min-width: 960px)')
+    const matches = useMediaQuery('(min-width: 768px)')
     const [toggle, setToggle] = useState(false)
     function downloadResume() {
 
     }
 
     return (
-        <nav className='relative top-0 max-w-[1440px] flex flex-1 items-center justify-between pt-12 pb-4 font-medium mx-8 md:mx-16 lg:mx-32'>
+        <nav className='absolute drop-shadow-md backdrop-blur-sm h-[150px] w-full top-0 flex items-center justify-between py-0 font-medium px-6 md:px-16 lg:px-32'>
             <div>
-                <motion.img animate={{ height: 60, opacity: 1 }}
-                     initial={{ height: 20, opacity: 0 }}
-                     transition={{ delay: 0.2, duration: 0.75 }}
+                <motion.img animate={{ opacity: 1 }}
+                     initial={{ opacity: 0 }}
+                            className='h-[60px]'
                      src={hat} alt="hat"/>
             </div>
-            <div className='flex px-2 text-3xl whitespace-nowrap'>
-                Adarsh {matches && <div className='px-2' >
-                Brata
-                <span className='px-2 font-bold bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'>
-                    Pal.
-                </span>
-            </div>}
-            </div>
-
+            <a className='decoration-0' href='/'>
+                <div className='flex px-2 text-3xl whitespace-nowrap'>
+                    Adarsh {matches &&
+                    <div className='px-2'>
+                      Brata
+                      <span
+                        className='px-2 font-bold bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'>
+                        Pal.
+                      </span>
+                    </div>
+                }
+                </div>
+            </a>
             {matches &&
-                <div className="space-x-1.5 text-xl">
+                <div className="space-x-1.5 text-xl ml-auto">
                     <a className='mx-2' href='/contact'>
                         Contact
                     </a>
@@ -46,7 +50,7 @@ export const NavBar = () => {
                     animate="visible"
                     initial="hidden"
                     transition={{ duration: 0.2 }}
-                    className="fixed left-0 top-0  z-10 flex h-screen
+                    className="fixed left-0 top-0  z-100 flex h-screen
                         w-full flex-col items-center  justify-center  gap-24 bg-zinc-900 text-2xl font-bold"
                 >
                     <div className="flex flex-col space-y-2 text-3xl ">
