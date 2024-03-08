@@ -1,6 +1,8 @@
 ---
 import { TITLE } from '../constants'
 import { NavBar } from "../Components/NavBar";
+import {Footer} from "../Components/Footer";
+
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -11,13 +13,16 @@ import { NavBar } from "../Components/NavBar";
     <meta name="generator" content={Astro.generator} />
     <title>{TITLE}</title>
 </head>
-<body class="bg-zinc-900 text-zinc-300">
-    <main class="grid grid-cols-1 grid-rows-[150px,_1fr]">
-        <section id="navbar">
+<body class="bg-zinc-900 text-zinc-300 h-screen w-screen overflow-hidden">
+    <main class="grid grid-cols-1 grid-rows-[150px,_1fr,_50px] h-full">
+        <div id="navbar" class="max-w-[1080px] max-h-[150px]">
             <NavBar client:load/>
-        </section>
-        <section id="body">
+        </div>
+        <section id="body" class="max-w-[1080px] overflow-scroll">
             <slot/>
+        </section>
+        <section id="footer" class="max-w-full">
+            <Footer/>
         </section>
     </main>
 </body>

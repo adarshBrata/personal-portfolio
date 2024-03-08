@@ -1,8 +1,17 @@
 ---
 import '../style.css'
 import Layout from "../Layout/Layout.astro";
+import me from "../../public/me.png"
+import {AboutMe} from "../Components/AboutMe";
 ---
 
 <Layout>
-
+    <div class="flex flex-col w-full">
+        <div class="mx-6 px-6 md:px-16 lg:px-32 md:my-2 lg:my-4 h-[300px] flex flex-1">
+            <div class=" top-1/4 left-1/4 text-5xl tracking-wider leading-2 text-slate-200">Namaskar 👋 !</div>
+        </div>
+        <div class="mt-8">
+            <AboutMe/>
+        </div>
+    </div>
 </Layout>
