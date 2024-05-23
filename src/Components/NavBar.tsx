@@ -1,4 +1,3 @@
-import hat from "/hat.png";
 import {motion} from "framer-motion";
 import {useMediaQuery} from "../util/useMediaQuery";
 import {useState} from "react";
@@ -16,7 +15,7 @@ export const NavBar = () => {
                 <motion.img animate={{ opacity: 1 }}
                      initial={{ opacity: 0 }}
                             className='h-[60px]'
-                     src={hat} alt="hat"/>
+                     src={'/hat.png'} alt="hat"/>
             </div>
             <a className='decoration-0' href='/'>
                 <div className='flex px-2 text-3xl whitespace-nowrap'>
@@ -40,8 +39,8 @@ export const NavBar = () => {
                        href='/blog'>
                         Blog
                     </a>
-                    <button className='mx-2 px-2 py-1' onClick={()=> downloadResume()}>
-                        Resume
+                    <button className='mx-2 px-2 py-1'>
+                      <a href={'../../public/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>Resume</a>
                     </button>
                 </div>
             }
