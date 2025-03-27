@@ -1,4 +1,4 @@
-import react from "../icons/react.svg";
+
 
 export const AboutMe = () => {
     return (
@@ -13,10 +13,10 @@ export const AboutMe = () => {
 		            <span className={'bg-gradient-to-tr from-rose-700 to-rose-300 bg-clip-text text-transparent'}>Angular, </span>
 		            <span className={'bg-gradient-to-r from-green-500 to-emerald-700 bg-clip-text text-transparent'}>Node.js </span> and
 		            <span className={'bg-gradient-to-br from-sky-700 to-yellow-500 bg-clip-text text-transparent'}> Python </span>
-		            for backend development.
+		            for full-stack development.
 	            </p>
 	            <p>
-		            I excel in both large and small agile projects, delivering robust solutions within tight deadlines.
+		            I excel in both large and small scale agile projects, delivering robust solutions within tight deadlines.
 	            </p>
 	            <p>
 		            What sets me apart is my eagerness to learn and adapt.

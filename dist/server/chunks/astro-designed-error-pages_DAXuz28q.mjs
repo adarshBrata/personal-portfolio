@@ -1,6 +1,5 @@
-import { ac as NOOP_MIDDLEWARE_HEADER, J as DEFAULT_404_COMPONENT } from './astro/server_Dsmz6xCH.mjs';
-import { parse } from 'devalue';
-import '@astrojs/internal-helpers/path';
+import { ae as NOOP_MIDDLEWARE_HEADER, af as REDIRECT_STATUS_CODES, A as AstroError, ag as ActionsReturnedInvalidDataError, K as DEFAULT_404_COMPONENT } from './astro/server_M2bLkdos.mjs';
+import { parse, stringify } from 'devalue';
 import { escape } from 'html-escaper';
 
 const NOOP_MIDDLEWARE_FN = async (_ctx, next) => {
@@ -9,12 +8,14 @@ const NOOP_MIDDLEWARE_FN = async (_ctx, next) => {
   return response;
 };
 
-const ACTION_QUERY_PARAMS = {
+const ACTION_QUERY_PARAMS$1 = {
   actionName: "_action",
   actionPayload: "_astroActionPayload"
 };
+const ACTION_RPC_ROUTE_PATTERN = "/_actions/[...path]";
 
 const __vite_import_meta_env__ = {"ASSETS_PREFIX": undefined, "BASE_URL": "/", "DEV": false, "MODE": "production", "PROD": true, "SITE": undefined, "SSR": true};
+const ACTION_QUERY_PARAMS = ACTION_QUERY_PARAMS$1;
 const codeToStatusMap = {
   // Implemented from tRPC error code table
   // https://trpc.io/docs/server/error-handling#error-codes
@@ -97,8 +98,63 @@ class ActionInputError extends ActionError {
   }
 }
 function getActionQueryString(name) {
-  const searchParams = new URLSearchParams({ [ACTION_QUERY_PARAMS.actionName]: name });
+  const searchParams = new URLSearchParams({ [ACTION_QUERY_PARAMS$1.actionName]: name });
   return `?${searchParams.toString()}`;
+}
+function serializeActionResult(res) {
+  if (res.error) {
+    if (Object.assign(__vite_import_meta_env__, { _: process.env._ })?.DEV) {
+      actionResultErrorStack.set(res.error.stack);
+    }
+    let body2;
+    if (res.error instanceof ActionInputError) {
+      body2 = {
+        type: res.error.type,
+        issues: res.error.issues,
+        fields: res.error.fields
+      };
+    } else {
+      body2 = {
+        ...res.error,
+        message: res.error.message
+      };
+    }
+    return {
+      type: "error",
+      status: res.error.status,
+      contentType: "application/json",
+      body: JSON.stringify(body2)
+    };
+  }
+  if (res.data === undefined) {
+    return {
+      type: "empty",
+      status: 204
+    };
+  }
+  let body;
+  try {
+    body = stringify(res.data, {
+      // Add support for URL objects
+      URL: (value) => value instanceof URL && value.href
+    });
+  } catch (e) {
+    let hint = ActionsReturnedInvalidDataError.hint;
+    if (res.data instanceof Response) {
+      hint = REDIRECT_STATUS_CODES.includes(res.data.status) ? "If you need to redirect when the action succeeds, trigger a redirect where the action is called. See the Actions guide for server and client redirect examples: https://docs.astro.build/en/guides/actions." : "If you need to return a Response object, try using a server endpoint instead. See https://docs.astro.build/en/guides/endpoints/#server-endpoints-api-routes";
+    }
+    throw new AstroError({
+      ...ActionsReturnedInvalidDataError,
+      message: ActionsReturnedInvalidDataError.message(String(e)),
+      hint
+    });
+  }
+  return {
+    type: "data",
+    status: 200,
+    contentType: "application/json+devalue",
+    body
+  };
 }
 function deserializeActionResult(res) {
   if (res.type === "error") {
@@ -282,4 +338,4 @@ const default404Instance = {
   default: default404Page
 };
 
-export { DEFAULT_404_ROUTE as D, NOOP_MIDDLEWARE_FN as N, default404Instance as a, deserializeActionResult as d, ensure404Route as e, getActionQueryString as g };
+export { ActionError as A, DEFAULT_404_ROUTE as D, NOOP_MIDDLEWARE_FN as N, ACTION_RPC_ROUTE_PATTERN as a, ACTION_QUERY_PARAMS as b, default404Instance as c, deserializeActionResult as d, ensure404Route as e, getActionQueryString as g, serializeActionResult as s };

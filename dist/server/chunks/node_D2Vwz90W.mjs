@@ -1,5 +1,8 @@
-import { isRemotePath, joinPaths } from '@astrojs/internal-helpers/path';
-import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, U as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, a as UnsupportedImageConversion, N as NoImageMetadata, F as FailedToFetchRemoteImageDimensions, b as ExpectedImageOptions, c as ExpectedNotESMImage, d as InvalidImageService, t as toStyleString, e as createComponent, f as ImageMissingAlt, r as renderTemplate, m as maybeRenderHead, g as addAttribute, s as spreadAttributes, h as createAstro } from './astro/server_Dsmz6xCH.mjs';
+import { readFile } from 'node:fs/promises';
+import { isAbsolute } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { i as isRemotePath, j as joinPaths } from './path_BuZodYwm.mjs';
+import { A as AstroError, E as ExpectedImage, L as LocalImageUsedWrongly, M as MissingImageDimension, U as UnsupportedImageFormat, I as IncompatibleDescriptorOptions, a as UnsupportedImageConversion, t as toStyleString, N as NoImageMetadata, F as FailedToFetchRemoteImageDimensions, b as ExpectedImageOptions, c as ExpectedNotESMImage, d as InvalidImageService, e as createComponent, f as ImageMissingAlt, r as renderTemplate, m as maybeRenderHead, g as addAttribute, s as spreadAttributes, h as createAstro } from './astro/server_M2bLkdos.mjs';
 import 'clsx';
 import * as mime from 'mrmime';
 import '../renderers.mjs';
@@ -127,18 +130,8 @@ const getSizesAttribute = ({
   }
 };
 
-function isESMImportedImage(src) {
-  return typeof src === "object" || typeof src === "function" && "src" in src;
-}
-function isRemoteImage(src) {
-  return typeof src === "string";
-}
-async function resolveSrc(src) {
-  return typeof src === "object" && "then" in src ? (await src).default ?? await src : src;
-}
-
 function matchPattern(url, remotePattern) {
-  return matchProtocol(url, remotePattern.protocol) && matchHostname(url, remotePattern.hostname, true) && matchPort(url, remotePattern.port) && matchPathname(url, remotePattern.pathname);
+  return matchProtocol(url, remotePattern.protocol) && matchHostname(url, remotePattern.hostname, true) && matchPort(url, remotePattern.port) && matchPathname(url, remotePattern.pathname, true);
 }
 function matchPort(url, port) {
   return !port || port === url.port;
@@ -146,7 +139,7 @@ function matchPort(url, port) {
 function matchProtocol(url, protocol) {
   return !protocol || protocol === url.protocol.slice(0, -1);
 }
-function matchHostname(url, hostname, allowWildcard) {
+function matchHostname(url, hostname, allowWildcard = false) {
   if (!hostname) {
     return true;
   } else if (!allowWildcard || !hostname.startsWith("*")) {
@@ -161,10 +154,10 @@ function matchHostname(url, hostname, allowWildcard) {
   }
   return false;
 }
-function matchPathname(url, pathname, allowWildcard) {
+function matchPathname(url, pathname, allowWildcard = false) {
   if (!pathname) {
     return true;
-  } else if (!pathname.endsWith("*")) {
+  } else if (!allowWildcard || !pathname.endsWith("*")) {
     return pathname === url.pathname;
   } else if (pathname.endsWith("/**")) {
     const slicedPathname = pathname.slice(0, -2);
@@ -177,12 +170,28 @@ function matchPathname(url, pathname, allowWildcard) {
   return false;
 }
 function isRemoteAllowed(src, {
-  domains = [],
-  remotePatterns = []
+  domains,
+  remotePatterns
 }) {
-  if (!isRemotePath(src)) return false;
+  if (!URL.canParse(src)) {
+    return false;
+  }
   const url = new URL(src);
   return domains.some((domain) => matchHostname(url, domain)) || remotePatterns.some((remotePattern) => matchPattern(url, remotePattern));
+}
+
+function isESMImportedImage(src) {
+  return typeof src === "object" || typeof src === "function" && "src" in src;
+}
+function isRemoteImage(src) {
+  return typeof src === "string";
+}
+async function resolveSrc(src) {
+  if (typeof src === "object" && "then" in src) {
+    const resource = await src;
+    return resource.default ?? resource;
+  }
+  return src;
 }
 
 function isLocalService(service) {
@@ -409,6 +418,16 @@ function getTargetDimensions(options) {
 
 function isImageMetadata(src) {
   return src.fsPath && !("fsPath" in src);
+}
+
+const cssFitValues = ["fill", "contain", "cover", "scale-down"];
+function addCSSVarsToStyle(vars, styles) {
+  const cssVars = Object.entries(vars).filter(([_, value]) => value !== undefined && value !== false).map(([key, value]) => `--${key}: ${value};`).join(" ");
+  if (!styles) {
+    return cssVars;
+  }
+  const style = typeof styles === "string" ? styles : toStyleString(styles);
+  return `${cssVars} ${style}`;
 }
 
 const decoder = new TextDecoder();
@@ -1180,28 +1199,29 @@ function lookup(input) {
 }
 
 async function imageMetadata(data, src) {
+  let result;
   try {
-    const result = lookup(data);
-    if (!result.height || !result.width || !result.type) {
-      throw new AstroError({
-        ...NoImageMetadata,
-        message: NoImageMetadata.message(src)
-      });
-    }
-    const { width, height, type, orientation } = result;
-    const isPortrait = (orientation || 0) >= 5;
-    return {
-      width: isPortrait ? height : width,
-      height: isPortrait ? width : height,
-      format: type,
-      orientation
-    };
+    result = lookup(data);
   } catch {
     throw new AstroError({
       ...NoImageMetadata,
       message: NoImageMetadata.message(src)
     });
   }
+  if (!result.height || !result.width || !result.type) {
+    throw new AstroError({
+      ...NoImageMetadata,
+      message: NoImageMetadata.message(src)
+    });
+  }
+  const { width, height, type, orientation } = result;
+  const isPortrait = (orientation || 0) >= 5;
+  return {
+    width: isPortrait ? height : width,
+    height: isPortrait ? width : height,
+    format: type,
+    orientation
+  };
 }
 
 async function inferRemoteSize(url) {
@@ -1245,7 +1265,7 @@ async function getConfiguredImageService() {
   if (!globalThis?.astroAsset?.imageService) {
     const { default: service } = await import(
       // @ts-expect-error
-      './sharp_BM0uDu_v.mjs'
+      './sharp_CryG0pjQ.mjs'
     ).catch((e) => {
       const error = new AstroError(InvalidImageService);
       error.cause = e;
@@ -1336,6 +1356,18 @@ async function getImage$1(options, imageConfig) {
     }
     delete resolvedOptions.priority;
     delete resolvedOptions.densities;
+    if (layout !== "none") {
+      resolvedOptions.style = addCSSVarsToStyle(
+        {
+          w: String(resolvedOptions.width),
+          h: String(resolvedOptions.height),
+          fit: cssFitValues.includes(resolvedOptions.fit ?? "") && resolvedOptions.fit,
+          pos: resolvedOptions.position
+        },
+        resolvedOptions.style
+      );
+      resolvedOptions["data-astro-image"] = layout;
+    }
   }
   const validatedOptions = service.validateOptions ? await service.validateOptions(resolvedOptions, imageConfig) : resolvedOptions;
   const srcSetTransforms = service.getSrcSet ? await service.getSrcSet(validatedOptions, imageConfig) : [];
@@ -1379,35 +1411,6 @@ async function getImage$1(options, imageConfig) {
   };
 }
 
-function addCSSVarsToStyle(vars, styles) {
-  const cssVars = Object.entries(vars).filter(([_, value]) => value !== undefined && value !== false).map(([key, value]) => `--${key}: ${value};`).join(" ");
-  if (!styles) {
-    return cssVars;
-  }
-  const style = typeof styles === "string" ? styles : toStyleString(styles);
-  return `${cssVars} ${style}`;
-}
-const cssFitValues = ["fill", "contain", "cover", "scale-down"];
-function applyResponsiveAttributes({
-  layout,
-  image,
-  props,
-  additionalAttributes
-}) {
-  const attributes = { ...additionalAttributes, ...image.attributes };
-  attributes.style = addCSSVarsToStyle(
-    {
-      w: image.attributes.width ?? props.width ?? image.options.width,
-      h: image.attributes.height ?? props.height ?? image.options.height,
-      fit: cssFitValues.includes(props.fit ?? "") && props.fit,
-      pos: props.position
-    },
-    attributes.style
-  );
-  attributes["data-astro-image"] = layout;
-  return attributes;
-}
-
 const $$Astro$1 = createAstro();
 const $$Image = createComponent(async ($$result, $$props, $$slots) => {
   const Astro2 = $$result.createAstro($$Astro$1, $$props, $$slots);
@@ -1434,12 +1437,7 @@ const $$Image = createComponent(async ($$result, $$props, $$slots) => {
   if (image.srcSet.values.length > 0) {
     additionalAttributes.srcset = image.srcSet.attribute;
   }
-  const { class: className, ...attributes } = useResponsive ? applyResponsiveAttributes({
-    layout,
-    image,
-    props,
-    additionalAttributes
-  }) : { ...additionalAttributes, ...image.attributes };
+  const { class: className, ...attributes } = { ...additionalAttributes, ...image.attributes };
   return renderTemplate`${maybeRenderHead()}<img${addAttribute(image.src, "src")}${spreadAttributes(attributes)}${addAttribute(className, "class")}>`;
 }, "/Users/adarshpal/Documents/Projects/personal-portfolio/node_modules/astro/components/Image.astro", undefined);
 
@@ -1504,19 +1502,25 @@ const $$Picture = createComponent(async ($$result, $$props, $$slots) => {
   if (fallbackImage.srcSet.values.length > 0) {
     imgAdditionalAttributes.srcset = fallbackImage.srcSet.attribute;
   }
-  const { class: className, ...attributes } = useResponsive ? applyResponsiveAttributes({
-    layout,
-    image: fallbackImage,
-    props,
-    additionalAttributes: imgAdditionalAttributes
-  }) : { ...imgAdditionalAttributes, ...fallbackImage.attributes };
+  const { class: className, ...attributes } = {
+    ...imgAdditionalAttributes,
+    ...fallbackImage.attributes
+  };
   return renderTemplate`${maybeRenderHead()}<picture${spreadAttributes(pictureAttributes)}> ${Object.entries(optimizedImages).map(([_, image]) => {
     const srcsetAttribute = props.densities || !props.densities && !props.widths && !useResponsive ? `${image.src}${image.srcSet.values.length > 0 ? ", " + image.srcSet.attribute : ""}` : image.srcSet.attribute;
     return renderTemplate`<source${addAttribute(srcsetAttribute, "srcset")}${addAttribute(mime.lookup(image.options.format ?? image.src) ?? `image/${image.options.format}`, "type")}${spreadAttributes(sourceAdditionalAttributes)}>`;
   })}  <img${addAttribute(fallbackImage.src, "src")}${spreadAttributes(attributes)}${addAttribute(className, "class")}> </picture>`;
 }, "/Users/adarshpal/Documents/Projects/personal-portfolio/node_modules/astro/components/Picture.astro", undefined);
 
-const imageConfig = {"endpoint":{"route":"/_image"},"service":{"entrypoint":"astro/assets/services/sharp","config":{}},"domains":[],"remotePatterns":[],"experimentalResponsiveImages":false};
+const imageConfig = {"endpoint":{"route":"/_image","entrypoint":"astro/assets/endpoint/node"},"service":{"entrypoint":"astro/assets/services/sharp","config":{}},"domains":[],"remotePatterns":[],"experimentalResponsiveImages":false};
+					// This is used by the @astrojs/node integration to locate images.
+					// It's unused on other platforms, but on some platforms like Netlify (and presumably also Vercel)
+					// new URL("dist/...") is interpreted by the bundler as a signal to include that directory
+					// in the Lambda bundle, which would bloat the bundle with images.
+					// To prevent this, we mark the URL construction as pure,
+					// so that it's tree-shaken away for all platforms that don't need it.
+					const outDir = /* #__PURE__ */ new URL("file:///Users/adarshpal/Documents/Projects/personal-portfolio/dist/client/");
+					const assetsDir = /* #__PURE__ */ new URL("_astro", outDir);
 					const getImage = async (options) => await getImage$1(options, imageConfig);
 
 const fnv1a52 = (str) => {
@@ -1544,16 +1548,45 @@ const etag = (payload, weak = false) => {
   return prefix + fnv1a52(payload).toString(36) + payload.length.toString(36) + '"';
 };
 
-async function loadRemoteImage(src, headers) {
+async function loadLocalImage(src, url) {
+  const assetsDirPath = fileURLToPath(assetsDir);
+  let fileUrl;
+  {
+    try {
+      const idx = url.pathname.indexOf("/_image");
+      if (idx > 0) {
+        src = src.slice(idx);
+      }
+      fileUrl = new URL("." + src, outDir);
+      const filePath = fileURLToPath(fileUrl);
+      if (!isAbsolute(filePath) || !filePath.startsWith(assetsDirPath)) {
+        return void 0;
+      }
+    } catch {
+      return undefined;
+    }
+  }
+  let buffer = undefined;
   try {
-    const res = await fetch(src, {
-      // Forward all headers from the original request
-      headers
-    });
+    buffer = await readFile(fileUrl);
+  } catch {
+    try {
+      const sourceUrl = new URL(src, url.origin);
+      buffer = await loadRemoteImage(sourceUrl);
+    } catch (err) {
+      console.error("Could not process image request:", err);
+      return undefined;
+    }
+  }
+  return buffer;
+}
+async function loadRemoteImage(src) {
+  try {
+    const res = await fetch(src);
     if (!res.ok) {
       return void 0;
     }
-    return await res.arrayBuffer();
+    return Buffer.from(await res.arrayBuffer());
   } catch {
     return undefined;
   }
@@ -1567,23 +1600,25 @@ const GET = async ({ request }) => {
     const url = new URL(request.url);
     const transform = await imageService.parseURL(url, imageConfig);
     if (!transform?.src) {
-      throw new Error("Incorrect transform returned by `parseURL`");
+      const err = new Error(
+        "Incorrect transform returned by `parseURL`. Expected a transform with a `src` property."
+      );
+      console.error("Could not parse image transform from URL:", err);
+      return new Response("Internal Server Error", { status: 500 });
     }
     let inputBuffer = void 0;
-    const isRemoteImage = isRemotePath(transform.src);
-    const sourceUrl = isRemoteImage ? new URL(transform.src) : new URL(transform.src, url.origin);
-    if (isRemoteImage && isRemoteAllowed(transform.src, imageConfig) === false) {
-      return new Response("Forbidden", { status: 403 });
+    if (isRemotePath(transform.src)) {
+      if (isRemoteAllowed(transform.src, imageConfig) === false) {
+        return new Response("Forbidden", { status: 403 });
+      }
+      inputBuffer = await loadRemoteImage(new URL(transform.src));
+    } else {
+      inputBuffer = await loadLocalImage(transform.src, url);
     }
-    inputBuffer = await loadRemoteImage(sourceUrl, isRemoteImage ? new Headers() : request.headers);
     if (!inputBuffer) {
-      return new Response("Not Found", { status: 404 });
+      return new Response("Internal Server Error", { status: 500 });
     }
-    const { data, format } = await imageService.transform(
-      new Uint8Array(inputBuffer),
-      transform,
-      imageConfig
-    );
+    const { data, format } = await imageService.transform(inputBuffer, transform, imageConfig);
     return new Response(data, {
       status: 200,
       headers: {
@@ -1595,7 +1630,12 @@ const GET = async ({ request }) => {
     });
   } catch (err) {
     console.error("Could not process image request:", err);
-    return new Response(`Server Error: ${err}`, { status: 500 });
+    return new Response(
+      `Internal Server Error`,
+      {
+        status: 500
+      }
+    );
   }
 };
 

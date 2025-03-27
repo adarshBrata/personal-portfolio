@@ -1,23 +1,9 @@
-/* empty css                                */
-import { e as createComponent, r as renderTemplate, j as renderComponent, m as maybeRenderHead } from '../chunks/astro/server_Dsmz6xCH.mjs';
+import { e as createComponent, r as renderTemplate, j as renderComponent, m as maybeRenderHead } from '../chunks/astro/server_M2bLkdos.mjs';
 import 'kleur/colors';
 /* empty css                                 */
-import { $ as $$Layout } from '../chunks/Layout_DWrPpHu8.mjs';
+import { $ as $$Layout } from '../chunks/Layout_BN4lf06E.mjs';
 import { jsxs, jsx } from 'react/jsx-runtime';
 export { renderers } from '../renderers.mjs';
-
-new Proxy({"src":"/_astro/react.CVm5BcvR.svg","width":16,"height":16,"format":"svg"}, {
-						get(target, name, receiver) {
-							if (name === 'clone') {
-								return structuredClone(target);
-							}
-							if (name === 'fsPath') {
-								return "/Users/adarshpal/Documents/Projects/personal-portfolio/src/icons/react.svg";
-							}
-							
-							return target[name];
-						}
-					});
 
 const AboutMe = () => {
   return /* @__PURE__ */ jsxs("div", { className: "mx-2 font-medium px-6 md:px-16 lg:px-32", children: [
@@ -30,9 +16,9 @@ const AboutMe = () => {
         /* @__PURE__ */ jsx("span", { className: "bg-gradient-to-r from-green-500 to-emerald-700 bg-clip-text text-transparent", children: "Node.js " }),
         " and",
         /* @__PURE__ */ jsx("span", { className: "bg-gradient-to-br from-sky-700 to-yellow-500 bg-clip-text text-transparent", children: " Python " }),
-        "for backend development."
+        "for full-stack development."
       ] }),
-      /* @__PURE__ */ jsx("p", { children: "I excel in both large and small agile projects, delivering robust solutions within tight deadlines." }),
+      /* @__PURE__ */ jsx("p", { children: "I excel in both large and small scale agile projects, delivering robust solutions within tight deadlines." }),
       /* @__PURE__ */ jsx("p", { children: "What sets me apart is my eagerness to learn and adapt. Looking ahead, I'm excited about contributing my skills to future projects, pushing the boundaries of technology, and creating impactful solutions." })
     ] }),
     /* @__PURE__ */ jsx("div", { className: "text-2xl mt-4 m-2 bg-gradient-to-r from-amber-300 to-rose-600 bg-clip-text text-transparent", children: "</ about >" })

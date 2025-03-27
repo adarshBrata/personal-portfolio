@@ -1,15 +1,15 @@
-import { R as ROUTE_TYPE_HEADER, n as REROUTE_DIRECTIVE_HEADER, A as AstroError, o as i18nNoLocaleFoundInPath, p as ResponseSentError, q as MiddlewareNoDataOrNextCalled, u as MiddlewareNotAResponse, v as RewriteWithBodyUsed, w as originPathnameSymbol, G as GetStaticPathsRequired, x as InvalidGetStaticPathsReturn, y as InvalidGetStaticPathsEntry, z as GetStaticPathsExpectedParams, B as GetStaticPathsInvalidRouteParam, P as PageNumberParamNotFound, C as decryptString, D as createSlotValueFromString, H as isAstroComponentFactory, r as renderTemplate, j as renderComponent, J as DEFAULT_404_COMPONENT, K as NoMatchingStaticPathFound, O as PrerenderDynamicEndpointPathCollide, Q as ReservedSlotName, S as renderSlotToString, T as renderJSX, V as chunkToString, W as isRenderInstruction, X as ForbiddenRewrite, Y as SessionStorageSaveError, Z as SessionStorageInitError, _ as LocalsReassigned, $ as AstroResponseHeadersReassigned, a0 as PrerenderClientAddressNotAvailable, a1 as clientAddressSymbol, a2 as ClientAddressNotAvailable, a3 as StaticClientAddressNotAvailable, a4 as ASTRO_VERSION, a5 as responseSentSymbol$1, a6 as renderPage, a7 as REWRITE_DIRECTIVE_HEADER_KEY, a8 as REWRITE_DIRECTIVE_HEADER_VALUE, a9 as renderEndpoint, aa as LocalsNotAnObject, ab as REROUTABLE_STATUS_CODES } from './astro/server_Dsmz6xCH.mjs';
-import { appendForwardSlash as appendForwardSlash$1, joinPaths, removeTrailingForwardSlash, trimSlashes, fileExtension, slash, prependForwardSlash as prependForwardSlash$1 } from '@astrojs/internal-helpers/path';
-import { serialize, parse } from 'cookie';
+import { n as decryptString, o as createSlotValueFromString, p as isAstroComponentFactory, r as renderTemplate, j as renderComponent, R as ROUTE_TYPE_HEADER, q as REROUTE_DIRECTIVE_HEADER, A as AstroError, v as i18nNoLocaleFoundInPath, w as ResponseSentError, x as MiddlewareNoDataOrNextCalled, y as MiddlewareNotAResponse, z as RewriteWithBodyUsed, B as originPathnameSymbol, G as GetStaticPathsRequired, C as InvalidGetStaticPathsReturn, D as InvalidGetStaticPathsEntry, H as GetStaticPathsExpectedParams, J as GetStaticPathsInvalidRouteParam, P as PageNumberParamNotFound, K as DEFAULT_404_COMPONENT, O as ActionNotFoundError, Q as NoMatchingStaticPathFound, S as PrerenderDynamicEndpointPathCollide, T as ReservedSlotName, V as renderSlotToString, W as renderJSX, X as chunkToString, Y as isRenderInstruction, Z as ForbiddenRewrite, _ as SessionStorageSaveError, $ as SessionStorageInitError, a0 as LocalsReassigned, a1 as AstroResponseHeadersReassigned, a2 as PrerenderClientAddressNotAvailable, a3 as clientAddressSymbol, a4 as ClientAddressNotAvailable, a5 as StaticClientAddressNotAvailable, a6 as ASTRO_VERSION, a7 as responseSentSymbol$1, a8 as renderPage, a9 as REWRITE_DIRECTIVE_HEADER_KEY, aa as REWRITE_DIRECTIVE_HEADER_VALUE, ab as renderEndpoint, ac as LocalsNotAnObject, ad as REROUTABLE_STATUS_CODES } from './astro/server_M2bLkdos.mjs';
 import { bold, red, yellow, dim, blue } from 'kleur/colors';
-import { g as getActionQueryString, d as deserializeActionResult, D as DEFAULT_404_ROUTE, a as default404Instance, N as NOOP_MIDDLEWARE_FN, e as ensure404Route } from './astro-designed-error-pages_u7dQduwr.mjs';
-import 'es-module-lexer';
 import 'clsx';
+import { serialize, parse } from 'cookie';
+import { A as ActionError, s as serializeActionResult, d as deserializeActionResult, a as ACTION_RPC_ROUTE_PATTERN, b as ACTION_QUERY_PARAMS, g as getActionQueryString, D as DEFAULT_404_ROUTE, c as default404Instance, N as NOOP_MIDDLEWARE_FN, e as ensure404Route } from './astro-designed-error-pages_DAXuz28q.mjs';
+import 'es-module-lexer';
 import buffer from 'node:buffer';
 import crypto$1 from 'node:crypto';
 import { Http2ServerResponse } from 'node:http2';
-import { unflatten as unflatten$1, stringify as stringify$1 } from 'devalue';
-import { createStorage, builtinDrivers } from 'unstorage';
+import { a as appendForwardSlash$1, j as joinPaths, r as removeTrailingForwardSlash, p as prependForwardSlash$1, t as trimSlashes, f as fileExtension, s as slash, c as collapseDuplicateTrailingSlashes, h as hasFileExtension } from './path_BuZodYwm.mjs';
+import { unflatten as unflatten$1, stringify as stringify$2 } from 'devalue';
+import destr from 'destr';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import fs from 'node:fs';
 import http from 'node:http';
@@ -38,10 +38,149 @@ function shouldAppendForwardSlash(trailingSlash, buildFormat) {
   }
 }
 
+function redirectIsExternal(redirect) {
+  if (typeof redirect === "string") {
+    return redirect.startsWith("http://") || redirect.startsWith("https://");
+  } else {
+    return redirect.destination.startsWith("http://") || redirect.destination.startsWith("https://");
+  }
+}
+async function renderRedirect(renderContext) {
+  const {
+    request: { method },
+    routeData
+  } = renderContext;
+  const { redirect, redirectRoute } = routeData;
+  const status = redirectRoute && typeof redirect === "object" ? redirect.status : method === "GET" ? 301 : 308;
+  const headers = { location: encodeURI(redirectRouteGenerate(renderContext)) };
+  if (redirect && redirectIsExternal(redirect)) {
+    if (typeof redirect === "string") {
+      return Response.redirect(redirect, status);
+    } else {
+      return Response.redirect(redirect.destination, status);
+    }
+  }
+  return new Response(null, { status, headers });
+}
+function redirectRouteGenerate(renderContext) {
+  const {
+    params,
+    routeData: { redirect, redirectRoute }
+  } = renderContext;
+  if (typeof redirectRoute !== "undefined") {
+    return redirectRoute?.generate(params) || redirectRoute?.pathname || "/";
+  } else if (typeof redirect === "string") {
+    if (redirectIsExternal(redirect)) {
+      return redirect;
+    } else {
+      let target = redirect;
+      for (const param of Object.keys(params)) {
+        const paramValue = params[param];
+        target = target.replace(`[${param}]`, paramValue).replace(`[...${param}]`, paramValue);
+      }
+      return target;
+    }
+  } else if (typeof redirect === "undefined") {
+    return "/";
+  }
+  return redirect.destination;
+}
+
+const SERVER_ISLAND_ROUTE = "/_server-islands/[name]";
+const SERVER_ISLAND_COMPONENT = "_server-islands.astro";
+const SERVER_ISLAND_BASE_PREFIX = "_server-islands";
+function badRequest(reason) {
+  return new Response(null, {
+    status: 400,
+    statusText: "Bad request: " + reason
+  });
+}
+async function getRequestData(request) {
+  switch (request.method) {
+    case "GET": {
+      const url = new URL(request.url);
+      const params = url.searchParams;
+      if (!params.has("s") || !params.has("e") || !params.has("p")) {
+        return badRequest("Missing required query parameters.");
+      }
+      const rawSlots = params.get("s");
+      try {
+        return {
+          componentExport: params.get("e"),
+          encryptedProps: params.get("p"),
+          slots: JSON.parse(rawSlots)
+        };
+      } catch {
+        return badRequest("Invalid slots format.");
+      }
+    }
+    case "POST": {
+      try {
+        const raw = await request.text();
+        const data = JSON.parse(raw);
+        return data;
+      } catch {
+        return badRequest("Request format is invalid.");
+      }
+    }
+    default: {
+      return new Response(null, { status: 405 });
+    }
+  }
+}
+function createEndpoint(manifest) {
+  const page = async (result) => {
+    const params = result.params;
+    if (!params.name) {
+      return new Response(null, {
+        status: 400,
+        statusText: "Bad request"
+      });
+    }
+    const componentId = params.name;
+    const data = await getRequestData(result.request);
+    if (data instanceof Response) {
+      return data;
+    }
+    const imp = manifest.serverIslandMap?.get(componentId);
+    if (!imp) {
+      return new Response(null, {
+        status: 404,
+        statusText: "Not found"
+      });
+    }
+    const key = await manifest.key;
+    const encryptedProps = data.encryptedProps;
+    const propString = encryptedProps === "" ? "{}" : await decryptString(key, encryptedProps);
+    const props = JSON.parse(propString);
+    const componentModule = await imp();
+    let Component = componentModule[data.componentExport];
+    const slots = {};
+    for (const prop in data.slots) {
+      slots[prop] = createSlotValueFromString(data.slots[prop]);
+    }
+    result.response.headers.set("X-Robots-Tag", "noindex");
+    if (isAstroComponentFactory(Component)) {
+      const ServerIsland = Component;
+      Component = function(...args) {
+        return ServerIsland.apply(this, args);
+      };
+      Object.assign(Component, ServerIsland);
+      Component.propagation = "self";
+    }
+    return renderTemplate`${renderComponent(result, "Component", Component, props, slots)}`;
+  };
+  page.isAstroComponentFactory = true;
+  const instance = {
+    default: page,
+    partial: true
+  };
+  return instance;
+}
+
 function matchRoute(pathname, manifest) {
-  const decodedPathname = decodeURI(pathname);
   return manifest.routes.find((route) => {
-    return route.pattern.test(decodedPathname) || route.fallbackRoutes.some((fallbackRoute) => fallbackRoute.pattern.test(decodedPathname));
+    return route.pattern.test(pathname) || route.fallbackRoutes.some((fallbackRoute) => fallbackRoute.pattern.test(pathname));
   });
 }
 const ROUTE404_RE = /^\/404\/?$/;
@@ -54,6 +193,22 @@ function isRoute500(route) {
 }
 function isRoute404or500(route) {
   return isRoute404(route.route) || isRoute500(route.route);
+}
+function isRouteServerIsland(route) {
+  return route.component === SERVER_ISLAND_COMPONENT;
+}
+function isRequestServerIsland(request, base = "") {
+  const url = new URL(request.url);
+  const pathname = base === "/" ? url.pathname.slice(base.length) : url.pathname.slice(base.length + 1);
+  return pathname.startsWith(SERVER_ISLAND_BASE_PREFIX);
+}
+function requestIs404Or500(request, base = "") {
+  const url = new URL(request.url);
+  const pathname = url.pathname.slice(base.length);
+  return isRoute404(pathname) || isRoute500(pathname);
+}
+function isRouteExternalRedirect(route) {
+  return !!(route.type === "redirect" && route.redirect && redirectIsExternal(route.redirect));
 }
 
 function createI18nMiddleware(i18n, base, trailingSlash, format) {
@@ -105,6 +260,9 @@ function createI18nMiddleware(i18n, base, trailingSlash, format) {
       return response;
     }
     if (requestIs404Or500(context.request, base)) {
+      return response;
+    }
+    if (isRequestServerIsland(context.request, base)) {
       return response;
     }
     const { currentLocale } = context;
@@ -178,11 +336,6 @@ function requestHasLocale(locales) {
   return function(context) {
     return pathHasLocale(context.url.pathname, locales);
   };
-}
-function requestIs404Or500(request, base = "") {
-  const url = new URL(request.url);
-  const pathname = url.pathname.slice(base.length);
-  return isRoute404(pathname) || isRoute500(pathname);
 }
 function pathHasLocale(path, locales) {
   const segments = path.split("/");
@@ -318,6 +471,7 @@ function redirectToFallback({
 const DELETED_EXPIRATION = /* @__PURE__ */ new Date(0);
 const DELETED_VALUE = "deleted";
 const responseSentSymbol = Symbol.for("astro.responseSent");
+const identity = (value) => value;
 class AstroCookie {
   constructor(value) {
     this.value = value;
@@ -388,25 +542,29 @@ class AstroCookies {
         return undefined;
       }
     }
-    const values = this.#ensureParsed(options);
+    const decode = options?.decode ?? decodeURIComponent;
+    const values = this.#ensureParsed();
     if (key in values) {
       const value = values[key];
-      return new AstroCookie(value);
+      if (value) {
+        return new AstroCookie(decode(value));
+      }
     }
   }
   /**
    * Astro.cookies.has(key) returns a boolean indicating whether this cookie is either
    * part of the initial request or set via Astro.cookies.set(key)
    * @param key The cookie to check for.
+   * @param _options This parameter is no longer used.
    * @returns
    */
-  has(key, options = undefined) {
+  has(key, _options) {
     if (this.#outgoing?.has(key)) {
       let [, , isSetValue] = this.#outgoing.get(key);
       return isSetValue;
     }
-    const values = this.#ensureParsed(options);
-    return !!values[key];
+    const values = this.#ensureParsed();
+    return values[key] !== undefined;
   }
   /**
    * Astro.cookies.set(key, value) is used to set a cookie's value. If provided
@@ -483,9 +641,9 @@ class AstroCookies {
     cookies.#consumed = true;
     return cookies.headers();
   }
-  #ensureParsed(options = undefined) {
+  #ensureParsed() {
     if (!this.#requestValues) {
-      this.#parse(options);
+      this.#parse();
     }
     if (!this.#requestValues) {
       this.#requestValues = {};
@@ -498,12 +656,12 @@ class AstroCookies {
     }
     return this.#outgoing;
   }
-  #parse(options = undefined) {
+  #parse() {
     const raw = this.#request.headers.get("cookie");
     if (!raw) {
       return;
     }
-    this.#requestValues = parse(raw, options);
+    this.#requestValues = parse(raw, { decode: identity });
   }
 }
 
@@ -664,6 +822,84 @@ const consoleLogDestination = {
 };
 
 const ACTION_API_CONTEXT_SYMBOL = Symbol.for("astro.actionAPIContext");
+const formContentTypes = ["application/x-www-form-urlencoded", "multipart/form-data"];
+function hasContentType(contentType, expected) {
+  const type = contentType.split(";")[0].toLowerCase();
+  return expected.some((t) => type === t);
+}
+
+function getActionContext(context) {
+  const callerInfo = getCallerInfo(context);
+  const actionResultAlreadySet = Boolean(context.locals._actionPayload);
+  let action = undefined;
+  if (callerInfo && context.request.method === "POST" && !actionResultAlreadySet) {
+    action = {
+      calledFrom: callerInfo.from,
+      name: callerInfo.name,
+      handler: async () => {
+        const pipeline = Reflect.get(context, apiContextRoutesSymbol);
+        const callerInfoName = shouldAppendForwardSlash(
+          pipeline.manifest.trailingSlash,
+          pipeline.manifest.buildFormat
+        ) ? removeTrailingForwardSlash(callerInfo.name) : callerInfo.name;
+        const baseAction = await pipeline.getAction(callerInfoName);
+        let input;
+        try {
+          input = await parseRequestBody(context.request);
+        } catch (e) {
+          if (e instanceof TypeError) {
+            return { data: undefined, error: new ActionError({ code: "UNSUPPORTED_MEDIA_TYPE" }) };
+          }
+          throw e;
+        }
+        const {
+          props: _props,
+          getActionResult: _getActionResult,
+          callAction: _callAction,
+          redirect: _redirect,
+          ...actionAPIContext
+        } = context;
+        Reflect.set(actionAPIContext, ACTION_API_CONTEXT_SYMBOL, true);
+        const handler = baseAction.bind(actionAPIContext);
+        return handler(input);
+      }
+    };
+  }
+  function setActionResult(actionName, actionResult) {
+    context.locals._actionPayload = {
+      actionResult,
+      actionName
+    };
+  }
+  return {
+    action,
+    setActionResult,
+    serializeActionResult,
+    deserializeActionResult
+  };
+}
+function getCallerInfo(ctx) {
+  if (ctx.routePattern === ACTION_RPC_ROUTE_PATTERN) {
+    return { from: "rpc", name: ctx.url.pathname.replace(/^.*\/_actions\//, "") };
+  }
+  const queryParam = ctx.url.searchParams.get(ACTION_QUERY_PARAMS.actionName);
+  if (queryParam) {
+    return { from: "form", name: queryParam };
+  }
+  return undefined;
+}
+async function parseRequestBody(request) {
+  const contentType = request.headers.get("content-type");
+  const contentLength = request.headers.get("Content-Length");
+  if (!contentType) return undefined;
+  if (hasContentType(contentType, formContentTypes)) {
+    return await request.clone().formData();
+  }
+  if (hasContentType(contentType, ["application/json"])) {
+    return contentLength === "0" ? undefined : await request.clone().json();
+  }
+  throw new TypeError("Unsupported content type");
+}
 
 function hasActionPayload(locals) {
   return "_actionPayload" in locals;
@@ -922,13 +1158,22 @@ function findRouteToRewrite({
     newUrl = new URL(payload, new URL(request.url).origin);
   }
   let pathname = newUrl.pathname;
+  const shouldAppendSlash = shouldAppendForwardSlash(trailingSlash, buildFormat);
   if (base !== "/" && newUrl.pathname.startsWith(base)) {
-    pathname = shouldAppendForwardSlash(trailingSlash, buildFormat) ? appendForwardSlash$1(newUrl.pathname) : removeTrailingForwardSlash(newUrl.pathname);
+    pathname = shouldAppendSlash ? appendForwardSlash$1(newUrl.pathname) : removeTrailingForwardSlash(newUrl.pathname);
     pathname = pathname.slice(base.length);
   }
+  if (!pathname.startsWith("/") && shouldAppendSlash && newUrl.pathname.endsWith("/")) {
+    pathname = prependForwardSlash$1(pathname);
+  }
+  if (pathname === "/" && base !== "/" && !shouldAppendSlash) {
+    pathname = "";
+  }
+  newUrl.pathname = joinPaths(...[base, pathname].filter(Boolean));
+  const decodedPathname = decodeURI(pathname);
   let foundRoute;
   for (const route of routes) {
-    if (route.pattern.test(decodeURI(pathname))) {
+    if (route.pattern.test(decodedPathname)) {
       foundRoute = route;
       break;
     }
@@ -937,7 +1182,7 @@ function findRouteToRewrite({
     return {
       routeData: foundRoute,
       newUrl,
-      pathname
+      pathname: decodedPathname
     };
   } else {
     const custom404 = routes.find((route) => route.route === "/404");
@@ -987,31 +1232,36 @@ function getOriginPathname(request) {
   return new URL(request.url).pathname;
 }
 
+const NOOP_ACTIONS_MOD = {
+  server: {}
+};
+
 const FORM_CONTENT_TYPES = [
   "application/x-www-form-urlencoded",
   "multipart/form-data",
   "text/plain"
 ];
+const SAFE_METHODS = ["GET", "HEAD", "OPTIONS"];
 function createOriginCheckMiddleware() {
   return defineMiddleware((context, next) => {
     const { request, url, isPrerendered } = context;
     if (isPrerendered) {
       return next();
     }
-    if (request.method === "GET") {
+    if (SAFE_METHODS.includes(request.method)) {
       return next();
     }
-    const sameOrigin = (request.method === "POST" || request.method === "PUT" || request.method === "PATCH" || request.method === "DELETE") && request.headers.get("origin") === url.origin;
+    const isSameOrigin = request.headers.get("origin") === url.origin;
     const hasContentType = request.headers.has("content-type");
     if (hasContentType) {
       const formLikeHeader = hasFormLikeHeader(request.headers.get("content-type"));
-      if (formLikeHeader && !sameOrigin) {
+      if (formLikeHeader && !isSameOrigin) {
         return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
           status: 403
         });
       }
     } else {
-      if (!sameOrigin) {
+      if (!isSameOrigin) {
         return new Response(`Cross-site ${request.method} form submissions are forbidden`, {
           status: 403
         });
@@ -1257,97 +1507,6 @@ function findPathItemByKey(staticPaths, params, route, logger) {
   logger.debug("router", `findPathItemByKey() - Unexpected cache miss looking for ${paramsKey}`);
 }
 
-const SERVER_ISLAND_ROUTE = "/_server-islands/[name]";
-const SERVER_ISLAND_COMPONENT = "_server-islands.astro";
-function badRequest(reason) {
-  return new Response(null, {
-    status: 400,
-    statusText: "Bad request: " + reason
-  });
-}
-async function getRequestData(request) {
-  switch (request.method) {
-    case "GET": {
-      const url = new URL(request.url);
-      const params = url.searchParams;
-      if (!params.has("s") || !params.has("e") || !params.has("p")) {
-        return badRequest("Missing required query parameters.");
-      }
-      const rawSlots = params.get("s");
-      try {
-        return {
-          componentExport: params.get("e"),
-          encryptedProps: params.get("p"),
-          slots: JSON.parse(rawSlots)
-        };
-      } catch {
-        return badRequest("Invalid slots format.");
-      }
-    }
-    case "POST": {
-      try {
-        const raw = await request.text();
-        const data = JSON.parse(raw);
-        return data;
-      } catch {
-        return badRequest("Request format is invalid.");
-      }
-    }
-    default: {
-      return new Response(null, { status: 405 });
-    }
-  }
-}
-function createEndpoint(manifest) {
-  const page = async (result) => {
-    const params = result.params;
-    if (!params.name) {
-      return new Response(null, {
-        status: 400,
-        statusText: "Bad request"
-      });
-    }
-    const componentId = params.name;
-    const data = await getRequestData(result.request);
-    if (data instanceof Response) {
-      return data;
-    }
-    const imp = manifest.serverIslandMap?.get(componentId);
-    if (!imp) {
-      return new Response(null, {
-        status: 404,
-        statusText: "Not found"
-      });
-    }
-    const key = await manifest.key;
-    const encryptedProps = data.encryptedProps;
-    const propString = encryptedProps === "" ? "{}" : await decryptString(key, encryptedProps);
-    const props = JSON.parse(propString);
-    const componentModule = await imp();
-    let Component = componentModule[data.componentExport];
-    const slots = {};
-    for (const prop in data.slots) {
-      slots[prop] = createSlotValueFromString(data.slots[prop]);
-    }
-    result.response.headers.set("X-Robots-Tag", "noindex");
-    if (isAstroComponentFactory(Component)) {
-      const ServerIsland = Component;
-      Component = function(...args) {
-        return ServerIsland.apply(this, args);
-      };
-      Object.assign(Component, ServerIsland);
-      Component.propagation = "self";
-    }
-    return renderTemplate`${renderComponent(result, "Component", Component, props, slots)}`;
-  };
-  page.isAstroComponentFactory = true;
-  const instance = {
-    default: page,
-    partial: true
-  };
-  return instance;
-}
-
 function createDefaultRoutes(manifest) {
   const root = new URL(manifest.hrefRoot);
   return [
@@ -1367,7 +1526,7 @@ function createDefaultRoutes(manifest) {
 }
 
 class Pipeline {
-  constructor(logger, manifest, runtimeMode, renderers, resolve, serverLike, streaming, adapterName = manifest.adapterName, clientDirectives = manifest.clientDirectives, inlinedScripts = manifest.inlinedScripts, compressHTML = manifest.compressHTML, i18n = manifest.i18n, middleware = manifest.middleware, routeCache = new RouteCache(logger, runtimeMode), site = manifest.site ? new URL(manifest.site) : undefined, defaultRoutes = createDefaultRoutes(manifest)) {
+  constructor(logger, manifest, runtimeMode, renderers, resolve, serverLike, streaming, adapterName = manifest.adapterName, clientDirectives = manifest.clientDirectives, inlinedScripts = manifest.inlinedScripts, compressHTML = manifest.compressHTML, i18n = manifest.i18n, middleware = manifest.middleware, routeCache = new RouteCache(logger, runtimeMode), site = manifest.site ? new URL(manifest.site) : undefined, defaultRoutes = createDefaultRoutes(manifest), actions = manifest.actions) {
     this.logger = logger;
     this.manifest = manifest;
     this.runtimeMode = runtimeMode;
@@ -1384,6 +1543,7 @@ class Pipeline {
     this.routeCache = routeCache;
     this.site = site;
     this.defaultRoutes = defaultRoutes;
+    this.actions = actions;
     this.internalMiddleware = [];
     if (i18n?.strategy !== "manual") {
       this.internalMiddleware.push(
@@ -1393,6 +1553,7 @@ class Pipeline {
   }
   internalMiddleware;
   resolvedMiddleware = undefined;
+  resolvedActions = undefined;
   /**
    * Resolves the middleware from the manifest, and returns the `onRequest` function. If `onRequest` isn't there,
    * it returns a no-op function
@@ -1413,6 +1574,41 @@ class Pipeline {
       this.resolvedMiddleware = NOOP_MIDDLEWARE_FN;
       return this.resolvedMiddleware;
     }
+  }
+  setActions(actions) {
+    this.resolvedActions = actions;
+  }
+  async getActions() {
+    if (this.resolvedActions) {
+      return this.resolvedActions;
+    } else if (this.actions) {
+      return await this.actions();
+    }
+    return NOOP_ACTIONS_MOD;
+  }
+  async getAction(path) {
+    const pathKeys = path.split(".").map((key) => decodeURIComponent(key));
+    let { server } = await this.getActions();
+    if (!server || !(typeof server === "object")) {
+      throw new TypeError(
+        `Expected \`server\` export in actions file to be an object. Received ${typeof server}.`
+      );
+    }
+    for (const key of pathKeys) {
+      if (!(key in server)) {
+        throw new AstroError({
+          ...ActionNotFoundError,
+          message: ActionNotFoundError.message(pathKeys.join("."))
+        });
+      }
+      server = server[key];
+    }
+    if (typeof server !== "function") {
+      throw new TypeError(
+        `Expected handler for action ${pathKeys.join(".")} to be a function. Received ${typeof server}.`
+      );
+    }
+    return server;
   }
 }
 
@@ -1435,36 +1631,6 @@ const RedirectSinglePageBuiltModule = {
   onRequest: (_, next) => next(),
   renderers: []
 };
-
-async function renderRedirect(renderContext) {
-  const {
-    request: { method },
-    routeData
-  } = renderContext;
-  const { redirect, redirectRoute } = routeData;
-  const status = redirectRoute && typeof redirect === "object" ? redirect.status : method === "GET" ? 301 : 308;
-  const headers = { location: encodeURI(redirectRouteGenerate(renderContext)) };
-  return new Response(null, { status, headers });
-}
-function redirectRouteGenerate(renderContext) {
-  const {
-    params,
-    routeData: { redirect, redirectRoute }
-  } = renderContext;
-  if (typeof redirectRoute !== "undefined") {
-    return redirectRoute?.generate(params) || redirectRoute?.pathname || "/";
-  } else if (typeof redirect === "string") {
-    let target = redirect;
-    for (const param of Object.keys(params)) {
-      const paramValue = params[param];
-      target = target.replace(`[${param}]`, paramValue).replace(`[...${param}]`, paramValue);
-    }
-    return target;
-  } else if (typeof redirect === "undefined") {
-    return "/";
-  }
-  return redirect.destination;
-}
 
 async function getProps(opts) {
   const { logger, mod, routeData: route, routeCache, pathname, serverLike, base } = opts;
@@ -1657,6 +1823,595 @@ function defineMiddleware(fn) {
   return fn;
 }
 
+function wrapToPromise(value) {
+  if (!value || typeof value.then !== "function") {
+    return Promise.resolve(value);
+  }
+  return value;
+}
+function asyncCall(function_, ...arguments_) {
+  try {
+    return wrapToPromise(function_(...arguments_));
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+function isPrimitive(value) {
+  const type = typeof value;
+  return value === null || type !== "object" && type !== "function";
+}
+function isPureObject(value) {
+  const proto = Object.getPrototypeOf(value);
+  return !proto || proto.isPrototypeOf(Object);
+}
+function stringify$1(value) {
+  if (isPrimitive(value)) {
+    return String(value);
+  }
+  if (isPureObject(value) || Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  if (typeof value.toJSON === "function") {
+    return stringify$1(value.toJSON());
+  }
+  throw new Error("[unstorage] Cannot stringify value!");
+}
+const BASE64_PREFIX = "base64:";
+function serializeRaw(value) {
+  if (typeof value === "string") {
+    return value;
+  }
+  return BASE64_PREFIX + base64Encode(value);
+}
+function deserializeRaw(value) {
+  if (typeof value !== "string") {
+    return value;
+  }
+  if (!value.startsWith(BASE64_PREFIX)) {
+    return value;
+  }
+  return base64Decode(value.slice(BASE64_PREFIX.length));
+}
+function base64Decode(input) {
+  if (globalThis.Buffer) {
+    return Buffer.from(input, "base64");
+  }
+  return Uint8Array.from(
+    globalThis.atob(input),
+    (c) => c.codePointAt(0)
+  );
+}
+function base64Encode(input) {
+  if (globalThis.Buffer) {
+    return Buffer.from(input).toString("base64");
+  }
+  return globalThis.btoa(String.fromCodePoint(...input));
+}
+function normalizeKey(key) {
+  if (!key) {
+    return "";
+  }
+  return key.split("?")[0]?.replace(/[/\\]/g, ":").replace(/:+/g, ":").replace(/^:|:$/g, "") || "";
+}
+function joinKeys(...keys) {
+  return normalizeKey(keys.join(":"));
+}
+function normalizeBaseKey(base) {
+  base = normalizeKey(base);
+  return base ? base + ":" : "";
+}
+function filterKeyByDepth(key, depth) {
+  if (depth === undefined) {
+    return true;
+  }
+  let substrCount = 0;
+  let index = key.indexOf(":");
+  while (index > -1) {
+    substrCount++;
+    index = key.indexOf(":", index + 1);
+  }
+  return substrCount <= depth;
+}
+function filterKeyByBase(key, base) {
+  if (base) {
+    return key.startsWith(base) && key[key.length - 1] !== "$";
+  }
+  return key[key.length - 1] !== "$";
+}
+
+function defineDriver(factory) {
+  return factory;
+}
+
+const DRIVER_NAME = "memory";
+const memory = defineDriver(() => {
+  const data = /* @__PURE__ */ new Map();
+  return {
+    name: DRIVER_NAME,
+    getInstance: () => data,
+    hasItem(key) {
+      return data.has(key);
+    },
+    getItem(key) {
+      return data.get(key) ?? null;
+    },
+    getItemRaw(key) {
+      return data.get(key) ?? null;
+    },
+    setItem(key, value) {
+      data.set(key, value);
+    },
+    setItemRaw(key, value) {
+      data.set(key, value);
+    },
+    removeItem(key) {
+      data.delete(key);
+    },
+    getKeys() {
+      return [...data.keys()];
+    },
+    clear() {
+      data.clear();
+    },
+    dispose() {
+      data.clear();
+    }
+  };
+});
+
+function createStorage(options = {}) {
+  const context = {
+    mounts: { "": options.driver || memory() },
+    mountpoints: [""],
+    watching: false,
+    watchListeners: [],
+    unwatch: {}
+  };
+  const getMount = (key) => {
+    for (const base of context.mountpoints) {
+      if (key.startsWith(base)) {
+        return {
+          base,
+          relativeKey: key.slice(base.length),
+          driver: context.mounts[base]
+        };
+      }
+    }
+    return {
+      base: "",
+      relativeKey: key,
+      driver: context.mounts[""]
+    };
+  };
+  const getMounts = (base, includeParent) => {
+    return context.mountpoints.filter(
+      (mountpoint) => mountpoint.startsWith(base) || includeParent && base.startsWith(mountpoint)
+    ).map((mountpoint) => ({
+      relativeBase: base.length > mountpoint.length ? base.slice(mountpoint.length) : undefined,
+      mountpoint,
+      driver: context.mounts[mountpoint]
+    }));
+  };
+  const onChange = (event, key) => {
+    if (!context.watching) {
+      return;
+    }
+    key = normalizeKey(key);
+    for (const listener of context.watchListeners) {
+      listener(event, key);
+    }
+  };
+  const startWatch = async () => {
+    if (context.watching) {
+      return;
+    }
+    context.watching = true;
+    for (const mountpoint in context.mounts) {
+      context.unwatch[mountpoint] = await watch(
+        context.mounts[mountpoint],
+        onChange,
+        mountpoint
+      );
+    }
+  };
+  const stopWatch = async () => {
+    if (!context.watching) {
+      return;
+    }
+    for (const mountpoint in context.unwatch) {
+      await context.unwatch[mountpoint]();
+    }
+    context.unwatch = {};
+    context.watching = false;
+  };
+  const runBatch = (items, commonOptions, cb) => {
+    const batches = /* @__PURE__ */ new Map();
+    const getBatch = (mount) => {
+      let batch = batches.get(mount.base);
+      if (!batch) {
+        batch = {
+          driver: mount.driver,
+          base: mount.base,
+          items: []
+        };
+        batches.set(mount.base, batch);
+      }
+      return batch;
+    };
+    for (const item of items) {
+      const isStringItem = typeof item === "string";
+      const key = normalizeKey(isStringItem ? item : item.key);
+      const value = isStringItem ? undefined : item.value;
+      const options2 = isStringItem || !item.options ? commonOptions : { ...commonOptions, ...item.options };
+      const mount = getMount(key);
+      getBatch(mount).items.push({
+        key,
+        value,
+        relativeKey: mount.relativeKey,
+        options: options2
+      });
+    }
+    return Promise.all([...batches.values()].map((batch) => cb(batch))).then(
+      (r) => r.flat()
+    );
+  };
+  const storage = {
+    // Item
+    hasItem(key, opts = {}) {
+      key = normalizeKey(key);
+      const { relativeKey, driver } = getMount(key);
+      return asyncCall(driver.hasItem, relativeKey, opts);
+    },
+    getItem(key, opts = {}) {
+      key = normalizeKey(key);
+      const { relativeKey, driver } = getMount(key);
+      return asyncCall(driver.getItem, relativeKey, opts).then(
+        (value) => destr(value)
+      );
+    },
+    getItems(items, commonOptions = {}) {
+      return runBatch(items, commonOptions, (batch) => {
+        if (batch.driver.getItems) {
+          return asyncCall(
+            batch.driver.getItems,
+            batch.items.map((item) => ({
+              key: item.relativeKey,
+              options: item.options
+            })),
+            commonOptions
+          ).then(
+            (r) => r.map((item) => ({
+              key: joinKeys(batch.base, item.key),
+              value: destr(item.value)
+            }))
+          );
+        }
+        return Promise.all(
+          batch.items.map((item) => {
+            return asyncCall(
+              batch.driver.getItem,
+              item.relativeKey,
+              item.options
+            ).then((value) => ({
+              key: item.key,
+              value: destr(value)
+            }));
+          })
+        );
+      });
+    },
+    getItemRaw(key, opts = {}) {
+      key = normalizeKey(key);
+      const { relativeKey, driver } = getMount(key);
+      if (driver.getItemRaw) {
+        return asyncCall(driver.getItemRaw, relativeKey, opts);
+      }
+      return asyncCall(driver.getItem, relativeKey, opts).then(
+        (value) => deserializeRaw(value)
+      );
+    },
+    async setItem(key, value, opts = {}) {
+      if (value === undefined) {
+        return storage.removeItem(key);
+      }
+      key = normalizeKey(key);
+      const { relativeKey, driver } = getMount(key);
+      if (!driver.setItem) {
+        return;
+      }
+      await asyncCall(driver.setItem, relativeKey, stringify$1(value), opts);
+      if (!driver.watch) {
+        onChange("update", key);
+      }
+    },
+    async setItems(items, commonOptions) {
+      await runBatch(items, commonOptions, async (batch) => {
+        if (batch.driver.setItems) {
+          return asyncCall(
+            batch.driver.setItems,
+            batch.items.map((item) => ({
+              key: item.relativeKey,
+              value: stringify$1(item.value),
+              options: item.options
+            })),
+            commonOptions
+          );
+        }
+        if (!batch.driver.setItem) {
+          return;
+        }
+        await Promise.all(
+          batch.items.map((item) => {
+            return asyncCall(
+              batch.driver.setItem,
+              item.relativeKey,
+              stringify$1(item.value),
+              item.options
+            );
+          })
+        );
+      });
+    },
+    async setItemRaw(key, value, opts = {}) {
+      if (value === undefined) {
+        return storage.removeItem(key, opts);
+      }
+      key = normalizeKey(key);
+      const { relativeKey, driver } = getMount(key);
+      if (driver.setItemRaw) {
+        await asyncCall(driver.setItemRaw, relativeKey, value, opts);
+      } else if (driver.setItem) {
+        await asyncCall(driver.setItem, relativeKey, serializeRaw(value), opts);
+      } else {
+        return;
+      }
+      if (!driver.watch) {
+        onChange("update", key);
+      }
+    },
+    async removeItem(key, opts = {}) {
+      if (typeof opts === "boolean") {
+        opts = { removeMeta: opts };
+      }
+      key = normalizeKey(key);
+      const { relativeKey, driver } = getMount(key);
+      if (!driver.removeItem) {
+        return;
+      }
+      await asyncCall(driver.removeItem, relativeKey, opts);
+      if (opts.removeMeta || opts.removeMata) {
+        await asyncCall(driver.removeItem, relativeKey + "$", opts);
+      }
+      if (!driver.watch) {
+        onChange("remove", key);
+      }
+    },
+    // Meta
+    async getMeta(key, opts = {}) {
+      if (typeof opts === "boolean") {
+        opts = { nativeOnly: opts };
+      }
+      key = normalizeKey(key);
+      const { relativeKey, driver } = getMount(key);
+      const meta = /* @__PURE__ */ Object.create(null);
+      if (driver.getMeta) {
+        Object.assign(meta, await asyncCall(driver.getMeta, relativeKey, opts));
+      }
+      if (!opts.nativeOnly) {
+        const value = await asyncCall(
+          driver.getItem,
+          relativeKey + "$",
+          opts
+        ).then((value_) => destr(value_));
+        if (value && typeof value === "object") {
+          if (typeof value.atime === "string") {
+            value.atime = new Date(value.atime);
+          }
+          if (typeof value.mtime === "string") {
+            value.mtime = new Date(value.mtime);
+          }
+          Object.assign(meta, value);
+        }
+      }
+      return meta;
+    },
+    setMeta(key, value, opts = {}) {
+      return this.setItem(key + "$", value, opts);
+    },
+    removeMeta(key, opts = {}) {
+      return this.removeItem(key + "$", opts);
+    },
+    // Keys
+    async getKeys(base, opts = {}) {
+      base = normalizeBaseKey(base);
+      const mounts = getMounts(base, true);
+      let maskedMounts = [];
+      const allKeys = [];
+      let allMountsSupportMaxDepth = true;
+      for (const mount of mounts) {
+        if (!mount.driver.flags?.maxDepth) {
+          allMountsSupportMaxDepth = false;
+        }
+        const rawKeys = await asyncCall(
+          mount.driver.getKeys,
+          mount.relativeBase,
+          opts
+        );
+        for (const key of rawKeys) {
+          const fullKey = mount.mountpoint + normalizeKey(key);
+          if (!maskedMounts.some((p) => fullKey.startsWith(p))) {
+            allKeys.push(fullKey);
+          }
+        }
+        maskedMounts = [
+          mount.mountpoint,
+          ...maskedMounts.filter((p) => !p.startsWith(mount.mountpoint))
+        ];
+      }
+      const shouldFilterByDepth = opts.maxDepth !== undefined && !allMountsSupportMaxDepth;
+      return allKeys.filter(
+        (key) => (!shouldFilterByDepth || filterKeyByDepth(key, opts.maxDepth)) && filterKeyByBase(key, base)
+      );
+    },
+    // Utils
+    async clear(base, opts = {}) {
+      base = normalizeBaseKey(base);
+      await Promise.all(
+        getMounts(base, false).map(async (m) => {
+          if (m.driver.clear) {
+            return asyncCall(m.driver.clear, m.relativeBase, opts);
+          }
+          if (m.driver.removeItem) {
+            const keys = await m.driver.getKeys(m.relativeBase || "", opts);
+            return Promise.all(
+              keys.map((key) => m.driver.removeItem(key, opts))
+            );
+          }
+        })
+      );
+    },
+    async dispose() {
+      await Promise.all(
+        Object.values(context.mounts).map((driver) => dispose(driver))
+      );
+    },
+    async watch(callback) {
+      await startWatch();
+      context.watchListeners.push(callback);
+      return async () => {
+        context.watchListeners = context.watchListeners.filter(
+          (listener) => listener !== callback
+        );
+        if (context.watchListeners.length === 0) {
+          await stopWatch();
+        }
+      };
+    },
+    async unwatch() {
+      context.watchListeners = [];
+      await stopWatch();
+    },
+    // Mount
+    mount(base, driver) {
+      base = normalizeBaseKey(base);
+      if (base && context.mounts[base]) {
+        throw new Error(`already mounted at ${base}`);
+      }
+      if (base) {
+        context.mountpoints.push(base);
+        context.mountpoints.sort((a, b) => b.length - a.length);
+      }
+      context.mounts[base] = driver;
+      if (context.watching) {
+        Promise.resolve(watch(driver, onChange, base)).then((unwatcher) => {
+          context.unwatch[base] = unwatcher;
+        }).catch(console.error);
+      }
+      return storage;
+    },
+    async unmount(base, _dispose = true) {
+      base = normalizeBaseKey(base);
+      if (!base || !context.mounts[base]) {
+        return;
+      }
+      if (context.watching && base in context.unwatch) {
+        context.unwatch[base]?.();
+        delete context.unwatch[base];
+      }
+      if (_dispose) {
+        await dispose(context.mounts[base]);
+      }
+      context.mountpoints = context.mountpoints.filter((key) => key !== base);
+      delete context.mounts[base];
+    },
+    getMount(key = "") {
+      key = normalizeKey(key) + ":";
+      const m = getMount(key);
+      return {
+        driver: m.driver,
+        base: m.base
+      };
+    },
+    getMounts(base = "", opts = {}) {
+      base = normalizeKey(base);
+      const mounts = getMounts(base, opts.parents);
+      return mounts.map((m) => ({
+        driver: m.driver,
+        base: m.mountpoint
+      }));
+    },
+    // Aliases
+    keys: (base, opts = {}) => storage.getKeys(base, opts),
+    get: (key, opts = {}) => storage.getItem(key, opts),
+    set: (key, value, opts = {}) => storage.setItem(key, value, opts),
+    has: (key, opts = {}) => storage.hasItem(key, opts),
+    del: (key, opts = {}) => storage.removeItem(key, opts),
+    remove: (key, opts = {}) => storage.removeItem(key, opts)
+  };
+  return storage;
+}
+function watch(driver, onChange, base) {
+  return driver.watch ? driver.watch((event, key) => onChange(event, base + key)) : () => {
+  };
+}
+async function dispose(driver) {
+  if (typeof driver.dispose === "function") {
+    await asyncCall(driver.dispose);
+  }
+}
+
+const builtinDrivers = {
+  "azure-app-configuration": "unstorage/drivers/azure-app-configuration",
+  "azureAppConfiguration": "unstorage/drivers/azure-app-configuration",
+  "azure-cosmos": "unstorage/drivers/azure-cosmos",
+  "azureCosmos": "unstorage/drivers/azure-cosmos",
+  "azure-key-vault": "unstorage/drivers/azure-key-vault",
+  "azureKeyVault": "unstorage/drivers/azure-key-vault",
+  "azure-storage-blob": "unstorage/drivers/azure-storage-blob",
+  "azureStorageBlob": "unstorage/drivers/azure-storage-blob",
+  "azure-storage-table": "unstorage/drivers/azure-storage-table",
+  "azureStorageTable": "unstorage/drivers/azure-storage-table",
+  "capacitor-preferences": "unstorage/drivers/capacitor-preferences",
+  "capacitorPreferences": "unstorage/drivers/capacitor-preferences",
+  "cloudflare-kv-binding": "unstorage/drivers/cloudflare-kv-binding",
+  "cloudflareKVBinding": "unstorage/drivers/cloudflare-kv-binding",
+  "cloudflare-kv-http": "unstorage/drivers/cloudflare-kv-http",
+  "cloudflareKVHttp": "unstorage/drivers/cloudflare-kv-http",
+  "cloudflare-r2-binding": "unstorage/drivers/cloudflare-r2-binding",
+  "cloudflareR2Binding": "unstorage/drivers/cloudflare-r2-binding",
+  "db0": "unstorage/drivers/db0",
+  "deno-kv-node": "unstorage/drivers/deno-kv-node",
+  "denoKVNode": "unstorage/drivers/deno-kv-node",
+  "deno-kv": "unstorage/drivers/deno-kv",
+  "denoKV": "unstorage/drivers/deno-kv",
+  "fs-lite": "unstorage/drivers/fs-lite",
+  "fsLite": "unstorage/drivers/fs-lite",
+  "fs": "unstorage/drivers/fs",
+  "github": "unstorage/drivers/github",
+  "http": "unstorage/drivers/http",
+  "indexedb": "unstorage/drivers/indexedb",
+  "localstorage": "unstorage/drivers/localstorage",
+  "lru-cache": "unstorage/drivers/lru-cache",
+  "lruCache": "unstorage/drivers/lru-cache",
+  "memory": "unstorage/drivers/memory",
+  "mongodb": "unstorage/drivers/mongodb",
+  "netlify-blobs": "unstorage/drivers/netlify-blobs",
+  "netlifyBlobs": "unstorage/drivers/netlify-blobs",
+  "null": "unstorage/drivers/null",
+  "overlay": "unstorage/drivers/overlay",
+  "planetscale": "unstorage/drivers/planetscale",
+  "redis": "unstorage/drivers/redis",
+  "s3": "unstorage/drivers/s3",
+  "session-storage": "unstorage/drivers/session-storage",
+  "sessionStorage": "unstorage/drivers/session-storage",
+  "uploadthing": "unstorage/drivers/uploadthing",
+  "upstash": "unstorage/drivers/upstash",
+  "vercel-blob": "unstorage/drivers/vercel-blob",
+  "vercelBlob": "unstorage/drivers/vercel-blob",
+  "vercel-kv": "unstorage/drivers/vercel-kv",
+  "vercelKV": "unstorage/drivers/vercel-kv"
+};
+
 const PERSIST_SYMBOL = Symbol();
 const DEFAULT_COOKIE_NAME = "astro-session";
 const VALID_COOKIE_REGEX = /^[\w-]+$/;
@@ -1666,7 +2421,7 @@ const unflatten = (parsed, _) => {
   });
 };
 const stringify = (data, _) => {
-  return stringify$1(data, {
+  return stringify$2(data, {
     // Support URL objects
     URL: (val) => val instanceof URL && val.href
   });
@@ -1699,6 +2454,7 @@ class AstroSession {
   // When we load the data from storage, we need to merge it with the local partial data,
   // preserving in-memory changes and deletions.
   #partial = true;
+  static #sharedStorage = /* @__PURE__ */ new Map();
   constructor(cookies, {
     cookie: cookieConfig = DEFAULT_COOKIE_NAME,
     ...config
@@ -1960,6 +2716,10 @@ class AstroSession {
     if (this.#storage) {
       return this.#storage;
     }
+    if (AstroSession.#sharedStorage.has(this.#config.driver)) {
+      this.#storage = AstroSession.#sharedStorage.get(this.#config.driver);
+      return this.#storage;
+    }
     if (this.#config.driver === "test") {
       this.#storage = this.#config.options.mockStorage;
       return this.#storage;
@@ -2013,6 +2773,7 @@ class AstroSession {
       this.#storage = createStorage({
         driver: driver(this.#config.options)
       });
+      AstroSession.#sharedStorage.set(this.#config.driver, this.#storage);
       return this.#storage;
     } catch (err) {
       throw new AstroError(
@@ -2025,25 +2786,30 @@ class AstroSession {
     }
   }
 }
-function resolveSessionDriver(driver) {
+async function resolveSessionDriver(driver) {
   if (!driver) {
     return null;
   }
-  if (driver === "fs") {
-    return import.meta.resolve(builtinDrivers.fsLite);
-  }
-  if (driver in builtinDrivers) {
-    return import.meta.resolve(builtinDrivers[driver]);
+  try {
+    if (driver === "fs") {
+      return await import.meta.resolve(builtinDrivers.fsLite);
+    }
+    if (driver in builtinDrivers) {
+      return await import.meta.resolve(builtinDrivers[driver]);
+    }
+  } catch {
+    return null;
   }
   return driver;
 }
 
 const apiContextRoutesSymbol = Symbol.for("context.routes");
 class RenderContext {
-  constructor(pipeline, locals, middleware, pathname, request, routeData, status, clientAddress, cookies = new AstroCookies(request), params = getParams(routeData, pathname), url = new URL(request.url), props = {}, partial = undefined, session = pipeline.manifest.sessionConfig ? new AstroSession(cookies, pipeline.manifest.sessionConfig) : undefined) {
+  constructor(pipeline, locals, middleware, actions, pathname, request, routeData, status, clientAddress, cookies = new AstroCookies(request), params = getParams(routeData, pathname), url = new URL(request.url), props = {}, partial = undefined, session = pipeline.manifest.sessionConfig ? new AstroSession(cookies, pipeline.manifest.sessionConfig) : undefined) {
     this.pipeline = pipeline;
     this.locals = locals;
     this.middleware = middleware;
+    this.actions = actions;
     this.pathname = pathname;
     this.request = request;
     this.routeData = routeData;
@@ -2074,14 +2840,17 @@ class RenderContext {
     clientAddress,
     status = 200,
     props,
-    partial = undefined
+    partial = undefined,
+    actions
   }) {
     const pipelineMiddleware = await pipeline.getMiddleware();
+    const pipelineActions = actions ?? await pipeline.getActions();
     setOriginPathname(request, pathname);
     return new RenderContext(
       pipeline,
       locals,
       sequence(...pipeline.internalMiddleware, middleware ?? pipelineMiddleware),
+      pipelineActions,
       pathname,
       request,
       routeData,
@@ -2117,7 +2886,8 @@ class RenderContext {
       serverLike,
       base: manifest.base
     });
-    const apiContext = this.createAPIContext(props);
+    const actionApiContext = this.createActionAPIContext();
+    const apiContext = this.createAPIContext(props, actionApiContext);
     this.counter++;
     if (this.counter === 4) {
       return new Response("Loop Detected", {
@@ -2164,6 +2934,13 @@ class RenderContext {
         this.status = 200;
       }
       let response2;
+      if (!ctx.isPrerendered) {
+        const { action, setActionResult, serializeActionResult } = getActionContext(ctx);
+        if (action?.calledFrom === "form") {
+          const actionResult = await action.handler();
+          setActionResult(action.name, serializeActionResult(actionResult));
+        }
+      }
       switch (this.routeData.type) {
         case "endpoint": {
           response2 = await renderEndpoint(
@@ -2177,7 +2954,7 @@ class RenderContext {
         case "redirect":
           return renderRedirect(this);
         case "page": {
-          const result = await this.createResult(componentInstance);
+          const result = await this.createResult(componentInstance, actionApiContext);
           try {
             response2 = await renderPage(
               result,
@@ -2210,6 +2987,9 @@ class RenderContext {
       }
       return response2;
     };
+    if (isRouteExternalRedirect(this.routeData)) {
+      return renderRedirect(this);
+    }
     const response = await callMiddleware(middleware, apiContext, lastNext);
     if (response.headers.get(ROUTE_TYPE_HEADER)) {
       response.headers.delete(ROUTE_TYPE_HEADER);
@@ -2217,8 +2997,7 @@ class RenderContext {
     attachCookiesToResponse(response, cookies);
     return response;
   }
-  createAPIContext(props) {
-    const context = this.createActionAPIContext();
+  createAPIContext(props, context) {
     const redirect = (path, status = 302) => new Response(null, { status, headers: { Location: path } });
     Reflect.set(context, apiContextRoutesSymbol, this.pipeline);
     return Object.assign(context, {
@@ -2303,7 +3082,7 @@ class RenderContext {
       session
     };
   }
-  async createResult(mod) {
+  async createResult(mod, ctx) {
     const { cookies, pathname, pipeline, routeData, status } = this;
     const { clientDirectives, inlinedScripts, compressHTML, manifest, renderers, resolve } = pipeline;
     const { links, scripts, styles } = await pipeline.headElements(routeData);
@@ -2324,6 +3103,7 @@ class RenderContext {
     };
     const result = {
       base: manifest.base,
+      userAssetsBase: manifest.userAssetsBase,
       cancelled: false,
       clientDirectives,
       inlinedScripts,
@@ -2331,7 +3111,7 @@ class RenderContext {
       compressHTML,
       cookies,
       /** This function returns the `Astro` faux-global */
-      createAstro: (astroGlobal, props, slots) => this.createAstro(result, astroGlobal, props, slots),
+      createAstro: (astroGlobal, props, slots) => this.createAstro(result, astroGlobal, props, slots, ctx),
       links,
       params: this.params,
       partial,
@@ -2368,17 +3148,19 @@ class RenderContext {
    *
    * The page level partial is used as the prototype of the user-visible `Astro` global object, which is instantiated once per use of a component.
    */
-  createAstro(result, astroStaticPartial, props, slotValues) {
+  createAstro(result, astroStaticPartial, props, slotValues, apiContext) {
     let astroPagePartial;
     if (this.isRewriting) {
       astroPagePartial = this.#astroPagePartial = this.createAstroPagePartial(
         result,
-        astroStaticPartial
+        astroStaticPartial,
+        apiContext
       );
     } else {
       astroPagePartial = this.#astroPagePartial ??= this.createAstroPagePartial(
         result,
-        astroStaticPartial
+        astroStaticPartial,
+        apiContext
       );
     }
     const astroComponentPartial = { props, self: null };
@@ -2401,7 +3183,7 @@ class RenderContext {
     });
     return Astro;
   }
-  createAstroPagePartial(result, astroStaticPartial) {
+  createAstroPagePartial(result, astroStaticPartial, apiContext) {
     const renderContext = this;
     const { cookies, locals, params, pipeline, url, session } = this;
     const { response } = result;
@@ -2416,6 +3198,7 @@ class RenderContext {
     const rewrite = async (reroutePayload) => {
       return await this.#executeRewrite(reroutePayload);
     };
+    const callAction = createCallAction(apiContext);
     return {
       generator: astroStaticPartial.generator,
       glob: astroStaticPartial.glob,
@@ -2444,7 +3227,7 @@ class RenderContext {
       site: pipeline.site,
       getActionResult: createGetActionResult(locals),
       get callAction() {
-        return createCallAction(this);
+        return callAction;
       },
       url,
       get originPathname() {
@@ -2489,7 +3272,7 @@ class RenderContext {
       return this.#currentLocale;
     }
     let computedLocale;
-    if (routeData.component === SERVER_ISLAND_COMPONENT) {
+    if (isRouteServerIsland(routeData)) {
       let referer = this.request.headers.get("referer");
       if (referer) {
         if (URL.canParse(referer)) {
@@ -2592,6 +3375,23 @@ function createModuleScriptElementWithSrc(src, base, assetsPrefix) {
     },
     children: ""
   };
+}
+
+function redirectTemplate({
+  status,
+  absoluteLocation,
+  relativeLocation,
+  from
+}) {
+  const delay = status === 302 ? 2 : 0;
+  return `<!doctype html>
+<title>Redirecting to: ${relativeLocation}</title>
+<meta http-equiv="refresh" content="${delay};url=${relativeLocation}">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="${absoluteLocation}">
+<body>
+	<a href="${relativeLocation}">Redirecting ${from ? `from <code>${from}</code> ` : ""}to <code>${relativeLocation}</code></a>
+</body>`;
 }
 
 class AppPipeline extends Pipeline {
@@ -2704,7 +3504,6 @@ class App {
   #baseWithoutTrailingSlash;
   #pipeline;
   #adapterLogger;
-  #renderOptionsDeprecationWarningShown = false;
   constructor(manifest, streaming = true) {
     this.#manifest = manifest;
     this.#manifestData = {
@@ -2783,7 +3582,7 @@ class App {
     if (!pathname) {
       pathname = prependForwardSlash$1(this.removeBase(url.pathname));
     }
-    let routeData = matchRoute(pathname, this.#manifestData);
+    let routeData = matchRoute(decodeURI(pathname), this.#manifestData);
     if (!routeData || routeData.prerender) return undefined;
     return routeData;
   }
@@ -2834,11 +3633,50 @@ class App {
     }
     return pathname;
   }
+  #redirectTrailingSlash(pathname) {
+    const { trailingSlash } = this.#manifest;
+    if (pathname === "/" || pathname.startsWith("/_")) {
+      return pathname;
+    }
+    const path = collapseDuplicateTrailingSlashes(pathname, trailingSlash !== "never");
+    if (path !== pathname) {
+      return path;
+    }
+    if (trailingSlash === "ignore") {
+      return pathname;
+    }
+    if (trailingSlash === "always" && !hasFileExtension(pathname)) {
+      return appendForwardSlash$1(pathname);
+    }
+    if (trailingSlash === "never") {
+      return removeTrailingForwardSlash(pathname);
+    }
+    return pathname;
+  }
   async render(request, renderOptions) {
     let routeData;
     let locals;
     let clientAddress;
     let addCookieHeader;
+    const url = new URL(request.url);
+    const redirect = this.#redirectTrailingSlash(url.pathname);
+    if (redirect !== url.pathname) {
+      const status = request.method === "GET" ? 301 : 308;
+      return new Response(
+        redirectTemplate({
+          status,
+          relativeLocation: url.pathname,
+          absoluteLocation: redirect,
+          from: request.url
+        }),
+        {
+          status,
+          headers: {
+            location: redirect + url.search
+          }
+        }
+      );
+    }
     addCookieHeader = renderOptions?.addCookieHeader;
     clientAddress = renderOptions?.clientAddress ?? Reflect.get(request, clientAddressSymbol);
     routeData = renderOptions?.routeData;
@@ -2862,6 +3700,11 @@ class App {
       routeData = this.match(request);
       this.#logger.debug("router", "Astro matched the following route for " + request.url);
       this.#logger.debug("router", "RouteData:\n" + routeData);
+    }
+    if (!routeData) {
+      routeData = this.#manifestData.routes.find(
+        (route) => route.component === "404.astro" || route.component === DEFAULT_404_COMPONENT
+      );
     }
     if (!routeData) {
       this.#logger.debug("router", "Astro hasn't found routes that match " + request.url);
@@ -3105,13 +3948,20 @@ class NodeApp extends App {
       return multiValueHeader?.toString()?.split(",").map((e) => e.trim())?.[0];
     };
     const forwardedProtocol = getFirstForwardedValue(req.headers["x-forwarded-proto"]);
-    const protocol = forwardedProtocol ?? (isEncrypted ? "https" : "http");
+    const providedProtocol = isEncrypted ? "https" : "http";
+    const protocol = forwardedProtocol ?? providedProtocol;
     const forwardedHostname = getFirstForwardedValue(req.headers["x-forwarded-host"]);
-    const hostname = forwardedHostname ?? req.headers.host ?? req.headers[":authority"];
+    const providedHostname = req.headers.host ?? req.headers[":authority"];
+    const hostname = forwardedHostname ?? providedHostname;
     const port = getFirstForwardedValue(req.headers["x-forwarded-port"]);
-    const portInHostname = typeof hostname === "string" && /:\d+$/.test(hostname);
-    const hostnamePort = portInHostname ? hostname : `${hostname}${port ? `:${port}` : ""}`;
-    const url = `${protocol}://${hostnamePort}${req.url}`;
+    let url;
+    try {
+      const hostnamePort = getHostnamePort(hostname, port);
+      url = new URL(`${protocol}://${hostnamePort}${req.url}`);
+    } catch {
+      const hostnamePort = getHostnamePort(providedHostname, port);
+      url = new URL(`${providedProtocol}://${hostnamePort}`);
+    }
     const options = {
       method: req.method || "GET",
       headers: makeRequestHeaders(req)
@@ -3173,6 +4023,11 @@ class NodeApp extends App {
     }
   }
 }
+function getHostnamePort(hostname, port) {
+  const portInHostname = typeof hostname === "string" && /:\d+$/.test(hostname);
+  const hostnamePort = portInHostname ? hostname : `${hostname}${port ? `:${port}` : ""}`;
+  return hostnamePort;
+}
 function makeRequestHeaders(req) {
   const headers = new Headers();
   for (const [name, value] of Object.entries(req.headers)) {
@@ -3218,370 +4073,302 @@ function asyncIterableToBodyProps(iterable) {
 
 apply();
 
-/**
- * Creates a Node.js http listener for on-demand rendered pages, compatible with http.createServer and Connect middleware.
- * If the next callback is provided, it will be called if the request does not have a matching route.
- * Intended to be used in both standalone and middleware mode.
- */
 function createAppHandler(app) {
-    /**
-     * Keep track of the current request path using AsyncLocalStorage.
-     * Used to log unhandled rejections with a helpful message.
-     */
-    const als = new AsyncLocalStorage();
-    const logger = app.getAdapterLogger();
-    process.on('unhandledRejection', (reason) => {
-        const requestUrl = als.getStore();
-        logger.error(`Unhandled rejection while rendering ${requestUrl}`);
-        console.error(reason);
-    });
-    return async (req, res, next, locals) => {
-        let request;
-        try {
-            request = NodeApp.createRequest(req);
-        }
-        catch (err) {
-            logger.error(`Could not render ${req.url}`);
-            console.error(err);
-            res.statusCode = 500;
-            res.end('Internal Server Error');
-            return;
-        }
-        const routeData = app.match(request);
-        if (routeData) {
-            const response = await als.run(request.url, () => app.render(request, {
-                addCookieHeader: true,
-                locals,
-                routeData,
-            }));
-            await NodeApp.writeResponse(response, res);
-        }
-        else if (next) {
-            return next();
-        }
-        else {
-            const response = await app.render(req);
-            await NodeApp.writeResponse(response, res);
-        }
-    };
+  const als = new AsyncLocalStorage();
+  const logger = app.getAdapterLogger();
+  process.on("unhandledRejection", (reason) => {
+    const requestUrl = als.getStore();
+    logger.error(`Unhandled rejection while rendering ${requestUrl}`);
+    console.error(reason);
+  });
+  return async (req, res, next, locals) => {
+    let request;
+    try {
+      request = NodeApp.createRequest(req);
+    } catch (err) {
+      logger.error(`Could not render ${req.url}`);
+      console.error(err);
+      res.statusCode = 500;
+      res.end("Internal Server Error");
+      return;
+    }
+    const routeData = app.match(request);
+    if (routeData) {
+      const response = await als.run(
+        request.url,
+        () => app.render(request, {
+          addCookieHeader: true,
+          locals,
+          routeData
+        })
+      );
+      await NodeApp.writeResponse(response, res);
+    } else if (next) {
+      return next();
+    } else {
+      const response = await app.render(req);
+      await NodeApp.writeResponse(response, res);
+    }
+  };
 }
 
-/**
- * Creates a middleware that can be used with Express, Connect, etc.
- *
- * Similar to `createAppHandler` but can additionally be placed in the express
- * chain as an error middleware.
- *
- * https://expressjs.com/en/guide/using-middleware.html#middleware.error-handling
- */
 function createMiddleware(app) {
-    const handler = createAppHandler(app);
-    const logger = app.getAdapterLogger();
-    // using spread args because express trips up if the function's
-    // stringified body includes req, res, next, locals directly
-    return async (...args) => {
-        // assume normal invocation at first
-        const [req, res, next, locals] = args;
-        // short circuit if it is an error invocation
-        if (req instanceof Error) {
-            const error = req;
-            if (next) {
-                return next(error);
-                // biome-ignore lint/style/noUselessElse: <explanation>
-            }
-            else {
-                throw error;
-            }
-        }
-        try {
-            await handler(req, res, next, locals);
-        }
-        catch (err) {
-            logger.error(`Could not render ${req.url}`);
-            console.error(err);
-            if (!res.headersSent) {
-                // biome-ignore lint/style/noUnusedTemplateLiteral: <explanation>
-                res.writeHead(500, `Server error`);
-                res.end();
-            }
-        }
-    };
+  const handler = createAppHandler(app);
+  const logger = app.getAdapterLogger();
+  return async (...args) => {
+    const [req, res, next, locals] = args;
+    if (req instanceof Error) {
+      const error = req;
+      if (next) {
+        return next(error);
+      } else {
+        throw error;
+      }
+    }
+    try {
+      await handler(req, res, next, locals);
+    } catch (err) {
+      logger.error(`Could not render ${req.url}`);
+      console.error(err);
+      if (!res.headersSent) {
+        res.writeHead(500, `Server error`);
+        res.end();
+      }
+    }
+  };
 }
 
-const wildcardHosts = new Set(['0.0.0.0', '::', '0000:0000:0000:0000:0000:0000:0000:0000']);
+const wildcardHosts = /* @__PURE__ */ new Set(["0.0.0.0", "::", "0000:0000:0000:0000:0000:0000:0000:0000"]);
 async function logListeningOn(logger, server, configuredHost) {
-    await new Promise((resolve) => server.once('listening', resolve));
-    const protocol = server instanceof https.Server ? 'https' : 'http';
-    // Allow to provide host value at runtime
-    const host = getResolvedHostForHttpServer(configuredHost);
-    const { port } = server.address();
-    const address = getNetworkAddress(protocol, host, port);
-    if (host === undefined || wildcardHosts.has(host)) {
-        logger.info(`Server listening on \n  local: ${address.local[0]} \t\n  network: ${address.network[0]}\n`);
-    }
-    else {
-        logger.info(`Server listening on ${address.local[0]}`);
-    }
+  await new Promise((resolve) => server.once("listening", resolve));
+  const protocol = server instanceof https.Server ? "https" : "http";
+  const host = getResolvedHostForHttpServer(configuredHost);
+  const { port } = server.address();
+  const address = getNetworkAddress(protocol, host, port);
+  if (host === undefined || wildcardHosts.has(host)) {
+    logger.info(
+      `Server listening on 
+  local: ${address.local[0]} 	
+  network: ${address.network[0]}
+`
+    );
+  } else {
+    logger.info(`Server listening on ${address.local[0]}`);
+  }
 }
 function getResolvedHostForHttpServer(host) {
-    if (host === false) {
-        // Use a secure default
-        return 'localhost';
-        // biome-ignore lint/style/noUselessElse: <explanation>
-    }
-    else if (host === true) {
-        // If passed --host in the CLI without arguments
-        return undefined; // undefined typically means 0.0.0.0 or :: (listen on all IPs)
-        // biome-ignore lint/style/noUselessElse: <explanation>
-    }
-    else {
-        return host;
-    }
+  if (host === false) {
+    return "localhost";
+  } else if (host === true) {
+    return undefined;
+  } else {
+    return host;
+  }
 }
-// this code from vite https://github.com/vitejs/vite/blob/d09bbd093a4b893e78f0bbff5b17c7cf7821f403/packages/vite/src/node/utils.ts#L892-L914
-function getNetworkAddress(
-// biome-ignore lint/style/useDefaultParameterLast: <explanation>
-protocol = 'http', hostname, port, base) {
-    const NetworkAddress = {
-        local: [],
-        network: [],
-    };
-    // biome-ignore lint/complexity/noForEach: <explanation>
-    Object.values(os.networkInterfaces())
-        .flatMap((nInterface) => nInterface ?? [])
-        .filter((detail) => 
-    // biome-ignore lint/complexity/useOptionalChain: <explanation>
-    detail &&
-        detail.address &&
-        (detail.family === 'IPv4' ||
-            // @ts-expect-error Node 18.0 - 18.3 returns number
-            detail.family === 4))
-        .forEach((detail) => {
-        let host = detail.address.replace('127.0.0.1', hostname === undefined || wildcardHosts.has(hostname) ? 'localhost' : hostname);
-        // ipv6 host
-        if (host.includes(':')) {
-            host = `[${host}]`;
-        }
-        const url = `${protocol}://${host}:${port}${''}`;
-        if (detail.address.includes('127.0.0.1')) {
-            NetworkAddress.local.push(url);
-        }
-        else {
-            NetworkAddress.network.push(url);
-        }
-    });
-    return NetworkAddress;
+function getNetworkAddress(protocol = "http", hostname, port, base) {
+  const NetworkAddress = {
+    local: [],
+    network: []
+  };
+  Object.values(os.networkInterfaces()).flatMap((nInterface) => nInterface ?? []).filter(
+    (detail) => detail && detail.address && (detail.family === "IPv4" || // @ts-expect-error Node 18.0 - 18.3 returns number
+    detail.family === 4)
+  ).forEach((detail) => {
+    let host = detail.address.replace(
+      "127.0.0.1",
+      hostname === undefined || wildcardHosts.has(hostname) ? "localhost" : hostname
+    );
+    if (host.includes(":")) {
+      host = `[${host}]`;
+    }
+    const url = `${protocol}://${host}:${port}${""}`;
+    if (detail.address.includes("127.0.0.1")) {
+      NetworkAddress.local.push(url);
+    } else {
+      NetworkAddress.network.push(url);
+    }
+  });
+  return NetworkAddress;
 }
 
-// check for a dot followed by a extension made up of lowercase characters
-const isSubresourceRegex = /.+\.[a-z]+$/i;
-/**
- * Creates a Node.js http listener for static files and prerendered pages.
- * In standalone mode, the static handler is queried first for the static files.
- * If one matching the request path is not found, it relegates to the SSR handler.
- * Intended to be used only in the standalone mode.
- */
 function createStaticHandler(app, options) {
-    const client = resolveClientDir(options);
-    /**
-     * @param ssr The SSR handler to be called if the static handler does not find a matching file.
-     */
-    return (req, res, ssr) => {
-        if (req.url) {
-            const [urlPath, urlQuery] = req.url.split('?');
-            const filePath = path.join(client, app.removeBase(urlPath));
-            let isDirectory = false;
-            try {
-                isDirectory = fs.lstatSync(filePath).isDirectory();
-            }
-            catch { }
-            const { trailingSlash = 'ignore' } = options;
-            const hasSlash = urlPath.endsWith('/');
-            let pathname = urlPath;
-            switch (trailingSlash) {
-                case 'never': {
-                    if (isDirectory && urlPath !== '/' && hasSlash) {
-                        // biome-ignore lint/style/useTemplate: more readable like this
-                        pathname = urlPath.slice(0, -1) + (urlQuery ? '?' + urlQuery : '');
-                        res.statusCode = 301;
-                        res.setHeader('Location', pathname);
-                        return res.end();
-                    }
-                    if (isDirectory && !hasSlash) {
-                        pathname = `${urlPath}/index.html`;
-                    }
-                    break;
-                }
-                case 'ignore': {
-                    if (isDirectory && !hasSlash) {
-                        pathname = `${urlPath}/index.html`;
-                    }
-                    break;
-                }
-                case 'always': {
-                    // trailing slash is not added to "subresources"
-                    if (!hasSlash && !isSubresourceRegex.test(urlPath)) {
-                        // biome-ignore lint/style/useTemplate: more readable like this
-                        pathname = urlPath + '/' + (urlQuery ? '?' + urlQuery : '');
-                        res.statusCode = 301;
-                        res.setHeader('Location', pathname);
-                        return res.end();
-                    }
-                    break;
-                }
-            }
-            // app.removeBase sometimes returns a path without a leading slash
-            pathname = prependForwardSlash(app.removeBase(pathname));
-            const stream = send(req, pathname, {
-                root: client,
-                dotfiles: pathname.startsWith('/.well-known/') ? 'allow' : 'deny',
-            });
-            let forwardError = false;
-            stream.on('error', (err) => {
-                if (forwardError) {
-                    console.error(err.toString());
-                    res.writeHead(500);
-                    res.end('Internal server error');
-                    return;
-                }
-                // File not found, forward to the SSR handler
-                ssr();
-            });
-            stream.on('headers', (_res) => {
-                // assets in dist/_astro are hashed and should get the immutable header
-                if (pathname.startsWith(`/${options.assets}/`)) {
-                    // This is the "far future" cache header, used for static files whose name includes their digest hash.
-                    // 1 year (31,536,000 seconds) is convention.
-                    // Taken from https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#immutable
-                    _res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-                }
-            });
-            stream.on('file', () => {
-                forwardError = true;
-            });
-            stream.pipe(res);
+  const client = resolveClientDir(options);
+  return (req, res, ssr) => {
+    if (req.url) {
+      const [urlPath, urlQuery] = req.url.split("?");
+      const filePath = path.join(client, app.removeBase(urlPath));
+      let isDirectory = false;
+      try {
+        isDirectory = fs.lstatSync(filePath).isDirectory();
+      } catch {
+      }
+      const { trailingSlash = "ignore" } = options;
+      const hasSlash = urlPath.endsWith("/");
+      let pathname = urlPath;
+      switch (trailingSlash) {
+        case "never": {
+          if (isDirectory && urlPath !== "/" && hasSlash) {
+            pathname = urlPath.slice(0, -1) + (urlQuery ? "?" + urlQuery : "");
+            res.statusCode = 301;
+            res.setHeader("Location", pathname);
+            return res.end();
+          }
+          if (isDirectory && !hasSlash) {
+            pathname = `${urlPath}/index.html`;
+          }
+          break;
         }
-        else {
-            ssr();
+        case "ignore": {
+          if (isDirectory && !hasSlash) {
+            pathname = `${urlPath}/index.html`;
+          }
+          break;
         }
-    };
+        case "always": {
+          if (!hasSlash && !hasFileExtension(urlPath)) {
+            pathname = urlPath + "/" + (urlQuery ? "?" + urlQuery : "");
+            res.statusCode = 301;
+            res.setHeader("Location", pathname);
+            return res.end();
+          }
+          break;
+        }
+      }
+      pathname = prependForwardSlash(app.removeBase(pathname));
+      const stream = send(req, pathname, {
+        root: client,
+        dotfiles: pathname.startsWith("/.well-known/") ? "allow" : "deny"
+      });
+      let forwardError = false;
+      stream.on("error", (err) => {
+        if (forwardError) {
+          console.error(err.toString());
+          res.writeHead(500);
+          res.end("Internal server error");
+          return;
+        }
+        ssr();
+      });
+      stream.on("headers", (_res) => {
+        if (pathname.startsWith(`/${options.assets}/`)) {
+          _res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+        }
+      });
+      stream.on("file", () => {
+        forwardError = true;
+      });
+      stream.pipe(res);
+    } else {
+      ssr();
+    }
+  };
 }
 function resolveClientDir(options) {
-    const clientURLRaw = new URL(options.client);
-    const serverURLRaw = new URL(options.server);
-    const rel = path.relative(url.fileURLToPath(serverURLRaw), url.fileURLToPath(clientURLRaw));
-    // walk up the parent folders until you find the one that is the root of the server entry folder. This is how we find the client folder relatively.
-    const serverFolder = path.basename(options.server);
-    let serverEntryFolderURL = path.dirname(import.meta.url);
-    while (!serverEntryFolderURL.endsWith(serverFolder)) {
-        serverEntryFolderURL = path.dirname(serverEntryFolderURL);
-    }
-    // biome-ignore lint/style/useTemplate: <explanation>
-    const serverEntryURL = serverEntryFolderURL + '/entry.mjs';
-    const clientURL = new URL(appendForwardSlash(rel), serverEntryURL);
-    const client = url.fileURLToPath(clientURL);
-    return client;
+  const clientURLRaw = new URL(options.client);
+  const serverURLRaw = new URL(options.server);
+  const rel = path.relative(url.fileURLToPath(serverURLRaw), url.fileURLToPath(clientURLRaw));
+  const serverFolder = path.basename(options.server);
+  let serverEntryFolderURL = path.dirname(import.meta.url);
+  while (!serverEntryFolderURL.endsWith(serverFolder)) {
+    serverEntryFolderURL = path.dirname(serverEntryFolderURL);
+  }
+  const serverEntryURL = serverEntryFolderURL + "/entry.mjs";
+  const clientURL = new URL(appendForwardSlash(rel), serverEntryURL);
+  const client = url.fileURLToPath(clientURL);
+  return client;
 }
 function prependForwardSlash(pth) {
-    // biome-ignore lint/style/useTemplate: <explanation>
-    return pth.startsWith('/') ? pth : '/' + pth;
+  return pth.startsWith("/") ? pth : "/" + pth;
 }
 function appendForwardSlash(pth) {
-    // biome-ignore lint/style/useTemplate: <explanation>
-    return pth.endsWith('/') ? pth : pth + '/';
+  return pth.endsWith("/") ? pth : pth + "/";
 }
 
-// Used to get Host Value at Runtime
 const hostOptions = (host) => {
-    if (typeof host === 'boolean') {
-        return host ? '0.0.0.0' : 'localhost';
-    }
-    return host;
+  if (typeof host === "boolean") {
+    return host ? "0.0.0.0" : "localhost";
+  }
+  return host;
 };
 function standalone(app, options) {
-    const port = process.env.PORT ? Number(process.env.PORT) : (options.port ?? 8080);
-    const host = process.env.HOST ?? hostOptions(options.host);
-    const handler = createStandaloneHandler(app, options);
-    const server = createServer(handler, host, port);
-    server.server.listen(port, host);
-    if (process.env.ASTRO_NODE_LOGGING !== 'disabled') {
-        logListeningOn(app.getAdapterLogger(), server.server, host);
-    }
-    return {
-        server,
-        done: server.closed(),
-    };
+  const port = process.env.PORT ? Number(process.env.PORT) : options.port ?? 8080;
+  const host = process.env.HOST ?? hostOptions(options.host);
+  const handler = createStandaloneHandler(app, options);
+  const server = createServer(handler, host, port);
+  server.server.listen(port, host);
+  if (process.env.ASTRO_NODE_LOGGING !== "disabled") {
+    logListeningOn(app.getAdapterLogger(), server.server, host);
+  }
+  return {
+    server,
+    done: server.closed()
+  };
 }
-// also used by server entrypoint
 function createStandaloneHandler(app, options) {
-    const appHandler = createAppHandler(app);
-    const staticHandler = createStaticHandler(app, options);
-    return (req, res) => {
-        try {
-            // validate request path
-            // biome-ignore lint/style/noNonNullAssertion: <explanation>
-            decodeURI(req.url);
-        }
-        catch {
-            res.writeHead(400);
-            res.end('Bad request.');
-            return;
-        }
-        staticHandler(req, res, () => appHandler(req, res));
-    };
+  const appHandler = createAppHandler(app);
+  const staticHandler = createStaticHandler(app, options);
+  return (req, res) => {
+    try {
+      decodeURI(req.url);
+    } catch {
+      res.writeHead(400);
+      res.end("Bad request.");
+      return;
+    }
+    staticHandler(req, res, () => appHandler(req, res));
+  };
 }
-// also used by preview entrypoint
 function createServer(listener, host, port) {
-    let httpServer;
-    if (process.env.SERVER_CERT_PATH && process.env.SERVER_KEY_PATH) {
-        httpServer = https.createServer({
-            key: fs.readFileSync(process.env.SERVER_KEY_PATH),
-            cert: fs.readFileSync(process.env.SERVER_CERT_PATH),
-        }, listener);
+  let httpServer;
+  if (process.env.SERVER_CERT_PATH && process.env.SERVER_KEY_PATH) {
+    httpServer = https.createServer(
+      {
+        key: fs.readFileSync(process.env.SERVER_KEY_PATH),
+        cert: fs.readFileSync(process.env.SERVER_CERT_PATH)
+      },
+      listener
+    );
+  } else {
+    httpServer = http.createServer(listener);
+  }
+  enableDestroy(httpServer);
+  const closed = new Promise((resolve, reject) => {
+    httpServer.addListener("close", resolve);
+    httpServer.addListener("error", reject);
+  });
+  const previewable = {
+    host,
+    port,
+    closed() {
+      return closed;
+    },
+    async stop() {
+      await new Promise((resolve, reject) => {
+        httpServer.destroy((err) => err ? reject(err) : resolve(undefined));
+      });
     }
-    else {
-        httpServer = http.createServer(listener);
-    }
-    enableDestroy(httpServer);
-    // Resolves once the server is closed
-    const closed = new Promise((resolve, reject) => {
-        httpServer.addListener('close', resolve);
-        httpServer.addListener('error', reject);
-    });
-    const previewable = {
-        host,
-        port,
-        closed() {
-            return closed;
-        },
-        async stop() {
-            await new Promise((resolve, reject) => {
-                httpServer.destroy((err) => (err ? reject(err) : resolve(undefined)));
-            });
-        },
-    };
-    return {
-        server: httpServer,
-        ...previewable,
-    };
+  };
+  return {
+    server: httpServer,
+    ...previewable
+  };
 }
 
-// Keep at the top
 function createExports(manifest, options) {
-    const app = new NodeApp(manifest);
-    options.trailingSlash = manifest.trailingSlash;
-    return {
-        options: options,
-        handler: options.mode === 'middleware' ? createMiddleware(app) : createStandaloneHandler(app, options),
-        startServer: () => standalone(app, options),
-    };
+  const app = new NodeApp(manifest);
+  options.trailingSlash = manifest.trailingSlash;
+  return {
+    options,
+    handler: options.mode === "middleware" ? createMiddleware(app) : createStandaloneHandler(app, options),
+    startServer: () => standalone(app, options)
+  };
 }
 function start(manifest, options) {
-    if (options.mode !== 'standalone' || process.env.ASTRO_NODE_AUTOSTART === 'disabled') {
-        return;
-    }
-    const app = new NodeApp(manifest);
-    standalone(app, options);
+  if (options.mode !== "standalone" || process.env.ASTRO_NODE_AUTOSTART === "disabled") {
+    return;
+  }
+  const app = new NodeApp(manifest);
+  standalone(app, options);
 }
 
 const serverEntrypointModule = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({

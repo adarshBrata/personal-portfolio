@@ -1,8 +1,9 @@
-import { e as createComponent, r as renderTemplate, g as addAttribute, i as renderHead, j as renderComponent, k as renderSlot, h as createAstro } from './astro/server_Dsmz6xCH.mjs';
+import { e as createComponent, r as renderTemplate, g as addAttribute, i as renderHead, j as renderComponent, k as renderSlot, h as createAstro } from './astro/server_M2bLkdos.mjs';
 import 'kleur/colors';
 import { jsxs, jsx } from 'react/jsx-runtime';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
+/* empty css                        */
 
 const TITLE = "Home";
 
