@@ -6,7 +6,7 @@ export const NavBar = () => {
     const matches = useMediaQuery('(min-width: 768px)')
     const [toggle, setToggle] = useState(false)
     function downloadResume() {
-
+        setToggle((prev) => !prev)
     }
 
     return (
@@ -40,7 +40,7 @@ export const NavBar = () => {
                         Blog
                     </a>
                     <button className='mx-2 px-2 py-1'>
-                      <a href={'../../public/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>Resume</a>
+                      <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>Resume</a>
                     </button>
                 </div>
             }
@@ -72,7 +72,7 @@ export const NavBar = () => {
                                        transition={{delay: 0.6}}
                                        exit={{x:-500}}
                                        onClick={()=> downloadResume()}>
-                            Resume
+                            <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>Resume</a>
                         </motion.button>
                     </div>
                 </motion.div>
