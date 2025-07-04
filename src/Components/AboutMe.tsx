@@ -6,31 +6,31 @@ export const AboutMe = () => {
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.2,
-                delayChildren: 0.3
+                staggerChildren: 0.15,
+                delayChildren: 0.2
             }
         }
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, x: -50 },
+        hidden: { opacity: 0, x: -30 },
         visible: {
             opacity: 1,
             x: 0,
             transition: {
-                duration: 0.6,
+                duration: 0.5,
                 ease: "easeOut"
             }
         }
     };
 
     const textVariants = {
-        hidden: { opacity: 0, y: 20 },
+        hidden: { opacity: 0, y: 15 },
         visible: {
             opacity: 1,
             y: 0,
             transition: {
-                duration: 0.8,
+                duration: 0.6,
                 ease: "easeOut"
             }
         }
@@ -52,28 +52,28 @@ export const AboutMe = () => {
             
             <motion.div 
                 variants={containerVariants}
-                className='w-4/5 pl-2 ml-4 text-md font-light tracking-wide leading-6 space-y-6 text-zinc-300'
+                className='w-4/5 pl-2 ml-4 text-md font-light tracking-wide leading-6 space-y-4 md:space-y-6 text-zinc-300'
             >
                 <motion.p variants={textVariants} className="leading-relaxed">
                     I'm a passionate Full Stack Developer based in Bengaluru, India with expertise in
                     <motion.span 
                         className={'bg-gradient-to-r from-sky-400 to-cyan-300 bg-clip-text text-transparent font-semibold'}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                     > React, </motion.span>
                     <motion.span 
                         className={'bg-gradient-to-tr from-rose-500 to-rose-300 bg-clip-text text-transparent font-semibold'}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                     >Angular, </motion.span>
                     <motion.span 
                         className={'bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent font-semibold'}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                     >Node.js </motion.span> and
                     <motion.span 
                         className={'bg-gradient-to-br from-blue-500 to-yellow-500 bg-clip-text text-transparent font-semibold'}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.02 }}
                         transition={{ duration: 0.2 }}
                     > Python </motion.span>
                     for full-stack development.
@@ -92,7 +92,7 @@ export const AboutMe = () => {
             
             <motion.div 
                 variants={itemVariants}
-                className='text-2xl mt-6 m-2 bg-gradient-to-r from-amber-400 via-amber-500 to-rose-500 bg-clip-text text-transparent font-bold'
+                className='text-2xl mt-4 md:mt-6 m-2 bg-gradient-to-r from-amber-400 via-amber-500 to-rose-500 bg-clip-text text-transparent font-bold'
             >
                 {'</ about >'}
             </motion.div>

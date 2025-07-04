@@ -23,13 +23,12 @@ export const NavBar = () => {
     };
 
     const logoVariants = {
-        hidden: { opacity: 0, scale: 0, rotate: -180 },
+        hidden: { opacity: 0, scale: 0 },
         visible: { 
             opacity: 1, 
             scale: 1, 
-            rotate: 0,
             transition: {
-                duration: 0.8,
+                duration: 0.6,
                 ease: "backOut",
                 delay: 0.2
             }
@@ -44,7 +43,7 @@ export const NavBar = () => {
             transition: {
                 duration: 0.6,
                 ease: "easeOut",
-                delay: 0.4
+                delay: 0.3
             }
         }
     };
@@ -57,8 +56,7 @@ export const NavBar = () => {
             transition: {
                 duration: 0.6,
                 ease: "easeOut",
-                delay: 0.6,
-                stagger: 0.1
+                delay: 0.4
             }
         }
     };
@@ -66,13 +64,11 @@ export const NavBar = () => {
     const mobileMenuVariants = {
         hidden: { 
             opacity: 0,
-            scale: 0.8,
-            y: -20
+            scale: 0.9
         },
         visible: { 
             opacity: 1,
             scale: 1,
-            y: 0,
             transition: {
                 duration: 0.3,
                 ease: "easeOut"
@@ -80,8 +76,7 @@ export const NavBar = () => {
         },
         exit: {
             opacity: 0,
-            scale: 0.8,
-            y: -20,
+            scale: 0.9,
             transition: {
                 duration: 0.2,
                 ease: "easeIn"
@@ -90,21 +85,21 @@ export const NavBar = () => {
     };
 
     const menuItemVariants = {
-        hidden: { opacity: 0, x: -100 },
+        hidden: { opacity: 0, x: -50 },
         visible: (i: number) => ({
             opacity: 1,
             x: 0,
             transition: {
                 delay: i * 0.1,
-                duration: 0.5,
+                duration: 0.4,
                 ease: "easeOut"
             }
         }),
         exit: { 
             opacity: 0, 
-            x: -100,
+            x: -50,
             transition: {
-                duration: 0.3,
+                duration: 0.2,
                 ease: "easeIn"
             }
         }
@@ -120,11 +115,9 @@ export const NavBar = () => {
             <motion.div variants={logoVariants}>
                 <motion.img 
                     whileHover={{ 
-                        scale: 1.1, 
-                        rotate: 10,
-                        transition: { duration: 0.3 }
+                        scale: 1.05,
+                        transition: { duration: 0.2 }
                     }}
-                    whileTap={{ scale: 0.95 }}
                     className='h-[60px] drop-shadow-lg'
                     src={'/hat.png'} 
                     alt="hat"
@@ -135,14 +128,13 @@ export const NavBar = () => {
                 variants={titleVariants}
                 className='decoration-0' 
                 href='/'
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.01 }}
             >
                 <div className='flex px-2 text-3xl whitespace-nowrap'>
                     <motion.span
                         whileHover={{ 
                             color: "#fbbf24",
-                            transition: { duration: 0.3 }
+                            transition: { duration: 0.2 }
                         }}
                     >
                         Adarsh
@@ -152,17 +144,13 @@ export const NavBar = () => {
                             <motion.span
                                 whileHover={{ 
                                     color: "#fbbf24",
-                                    transition: { duration: 0.3 }
+                                    transition: { duration: 0.2 }
                                 }}
                             >
                                 Brata
                             </motion.span>
                             <motion.span
                                 className='px-2 font-bold bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'
-                                whileHover={{ 
-                                    scale: 1.05,
-                                    transition: { duration: 0.3 }
-                                }}
                             >
                                 Pal.
                             </motion.span>
@@ -174,41 +162,31 @@ export const NavBar = () => {
             {matches && (
                 <motion.div 
                     variants={menuVariants}
-                    className="space-x-1.5 text-xl ml-auto"
+                    className="flex items-center space-x-4 text-lg ml-auto"
                 >
                     <motion.a 
-                        className='mx-2 relative'
+                        className='relative'
                         href='/contact'
                         whileHover={{ 
-                            scale: 1.05,
+                            scale: 1.02,
                             color: "#fbbf24"
                         }}
-                        whileTap={{ scale: 0.95 }}
                     >
-                        <span className="relative">
-                            Contact
-                            <motion.div
-                                className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-300"
-                                whileHover={{ width: "100%" }}
-                                transition={{ duration: 0.3 }}
-                            />
-                        </span>
+                        Contact
                     </motion.a>
                     <motion.a 
-                        className='mx-2 bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent relative'
+                        className='bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent relative'
                         href='/blog'
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={{ scale: 1.02 }}
                     >
                         Blog
                     </motion.a>
                     <motion.button 
-                        className='mx-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 rounded-full font-semibold shadow-lg'
+                        className='px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 rounded-full font-semibold shadow-lg text-sm'
                         whileHover={{ 
-                            scale: 1.05,
-                            boxShadow: "0 10px 25px rgba(245, 158, 11, 0.3)"
+                            scale: 1.02,
+                            boxShadow: "0 8px 20px rgba(245, 158, 11, 0.25)"
                         }}
-                        whileTap={{ scale: 0.95 }}
                     >
                         <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>
                             Resume
@@ -224,9 +202,9 @@ export const NavBar = () => {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="fixed left-0 top-0 z-40 flex h-screen w-full flex-col items-center justify-center gap-12 bg-zinc-900/95 backdrop-blur-lg text-2xl font-bold"
+                        className="fixed left-0 top-0 z-40 flex h-screen w-full flex-col items-start justify-center gap-8 bg-zinc-900/95 backdrop-blur-lg text-2xl font-bold pl-16"
                     >
-                        <div className="flex flex-col space-y-8 text-3xl">
+                        <div className="flex flex-col space-y-6 text-2xl">
                             <motion.a 
                                 custom={0}
                                 variants={menuItemVariants}
@@ -234,9 +212,9 @@ export const NavBar = () => {
                                 animate="visible"
                                 exit="exit"
                                 href='/contact'
-                                className="relative"
+                                className="relative text-zinc-100"
                                 whileHover={{ 
-                                    scale: 1.1,
+                                    scale: 1.05,
                                     color: "#fbbf24"
                                 }}
                                 onClick={() => setToggle(false)}
@@ -251,7 +229,7 @@ export const NavBar = () => {
                                 exit="exit"
                                 href='/blog'
                                 className='bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'
-                                whileHover={{ scale: 1.1 }}
+                                whileHover={{ scale: 1.05 }}
                                 onClick={() => setToggle(false)}
                             >
                                 Blog
@@ -263,8 +241,8 @@ export const NavBar = () => {
                                 animate="visible"
                                 exit="exit"
                                 onClick={() => downloadResume()}
-                                whileHover={{ scale: 1.1 }}
-                                className="bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 px-6 py-3 rounded-full font-semibold"
+                                whileHover={{ scale: 1.05 }}
+                                className="bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 px-6 py-3 rounded-full font-semibold text-left"
                             >
                                 <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>
                                     Resume
@@ -279,8 +257,7 @@ export const NavBar = () => {
                 <motion.div 
                     onClick={() => setToggle(prev => !prev)}
                     className='flex flex-col space-y-1.5 cursor-pointer z-50 p-2'
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
                 >
                     <motion.span
                         animate={{ 
