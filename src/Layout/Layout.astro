@@ -16,7 +16,7 @@ import '../styles/global.css'
 <body class="bg-zinc-900 text-zinc-300 min-h-screen">
     <main class="grid grid-cols-1 grid-rows-[150px,_1fr,_50px] min-h-screen">
         <div id="navbar" class="max-w-full max-h-[150px]">
-            <NavBar client:load/>
+            <NavBar client:only="react"/>
         </div>
         <section id="body" class="max-w-full overflow-y-auto">
             <slot/>
