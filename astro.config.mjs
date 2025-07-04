@@ -7,7 +7,4 @@ import icon from "astro-icon";
 export default defineConfig({
   integrations: [react(), tailwind(), icon()],
   output: 'static',
-  experimental: {
-    svg: true,
-  },
 });
