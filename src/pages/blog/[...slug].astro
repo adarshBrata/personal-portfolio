@@ -1,0 +1,145 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../Layout/Layout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: post,
+  }));
+}
+
+const post = Astro.props;
+const { Content } = await post.render();
+
+const formattedDate = new Date(post.data.pubDate).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<Layout>
+    <article class="max-w-4xl mx-auto px-6 md:px-8 py-8">
+        <!-- Hero Image -->
+        {post.data.heroImage && (
+            <div class="aspect-video overflow-hidden rounded-lg mb-8">
+                <img 
+                    src={post.data.heroImage} 
+                    alt={post.data.title}
+                    class="w-full h-full object-cover"
+                />
+            </div>
+        )}
+
+        <!-- Article Header -->
+        <header class="mb-8">
+            <div class="flex flex-wrap gap-2 mb-4">
+                {post.data.tags.map((tag: string) => (
+                    <span class="px-3 py-1 text-sm rounded-full bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 font-medium">
+                        {tag}
+                    </span>
+                ))}
+            </div>
+            
+            <h1 class="text-4xl md:text-5xl font-bold text-zinc-100 mb-4 leading-tight">
+                {post.data.title}
+            </h1>
+            
+            <p class="text-xl text-zinc-300 mb-6">
+                {post.data.description}
+            </p>
+            
+            <div class="flex items-center gap-4 text-zinc-400">
+                <time class="text-sm">{formattedDate}</time>
+                {post.data.updatedDate && (
+                    <span class="text-sm">
+                        Updated: {new Date(post.data.updatedDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                        })}
+                    </span>
+                )}
+            </div>
+        </header>
+
+        <!-- Article Content -->
+        <div class="prose prose-invert prose-lg max-w-none">
+            <Content />
+        </div>
+
+        <!-- Back to Blog -->
+        <div class="mt-12 pt-8 border-t border-zinc-700">
+            <a 
+                href="/blog" 
+                class="inline-flex items-center text-amber-300 hover:text-amber-400 transition-colors font-medium"
+            >
+                ← Back to Blog
+            </a>
+        </div>
+    </article>
+</Layout>
+
+<style>
+    .prose {
+        color: #d4d4d8;
+    }
+    
+    .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+        color: #f4f4f5;
+        font-weight: 700;
+    }
+    
+    .prose h2 {
+        background: linear-gradient(to right, #f59e0b, #fbbf24);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .prose a {
+        color: #fbbf24;
+        text-decoration: none;
+    }
+    
+    .prose a:hover {
+        color: #f59e0b;
+    }
+    
+    .prose code {
+        background-color: #27272a;
+        color: #fbbf24;
+        padding: 0.125rem 0.25rem;
+        border-radius: 0.25rem;
+        font-size: 0.875em;
+    }
+    
+    .prose pre {
+        background-color: #18181b;
+        border: 1px solid #3f3f46;
+        border-radius: 0.5rem;
+    }
+    
+    .prose pre code {
+        background-color: transparent;
+        color: #d4d4d8;
+    }
+    
+    .prose blockquote {
+        border-left: 4px solid #fbbf24;
+        background-color: #27272a;
+        padding: 1rem;
+        margin: 1.5rem 0;
+    }
+    
+    .prose ul, .prose ol {
+        color: #d4d4d8;
+    }
+    
+    .prose strong {
+        color: #f4f4f5;
+        font-weight: 600;
+    }
+</style>
