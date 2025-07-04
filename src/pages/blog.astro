@@ -1,76 +1,162 @@
 ---
 import Layout from "../Layout/Layout.astro";
 import { getCollection } from 'astro:content';
-import { BlogCard } from '../components/BlogCard';
+import { AnimatedBlogCard } from '../components/AnimatedBlogCard';
+import { BlogCarousel } from '../components/BlogCarousel';
 
 const allPosts = await getCollection('blog');
 const sortedPosts = allPosts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 const featuredPosts = sortedPosts.filter(post => post.data.featured);
-const recentPosts = sortedPosts.slice(0, 6);
+const recentPosts = sortedPosts.slice(0, 9);
 ---
 
 <Layout>
-    <div class="w-full">
-        <!-- Hero Section -->
-        <div class="relative h-64 sm:h-80 md:h-96 mb-8 md:mb-12 rounded-lg overflow-hidden bg-gradient-to-br from-zinc-800 to-zinc-900 mx-2 sm:mx-4 md:mx-6 lg:mx-8">
-            <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent"></div>
+    <div class="w-full min-h-screen">
+        <!-- Hero Section with Animation -->
+        <div class="relative h-64 sm:h-80 md:h-96 mb-8 md:mb-16 rounded-2xl overflow-hidden bg-gradient-to-br from-zinc-800 via-zinc-900 to-black mx-2 sm:mx-4 md:mx-6 lg:mx-8 shadow-2xl border border-zinc-700/50">
+            <div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent"></div>
             <img 
                 src="https://images.pexels.com/photos/1181677/pexels-photo-1181677.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" 
                 alt="Blog Hero" 
                 class="w-full h-full object-cover"
             />
             <div class="absolute inset-0 flex items-center">
-                <div class="px-4 sm:px-6 md:px-8 lg:px-16">
-                    <!-- Profile Circle Placeholder -->
-                    <div class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-r from-amber-500 to-amber-300 mb-4 md:mb-6 flex items-center justify-center">
+                <div class="px-4 sm:px-6 md:px-8 lg:px-16 max-w-4xl">
+                    <!-- Animated Profile Circle -->
+                    <div id="profile-circle" class="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 mb-4 md:mb-6 flex items-center justify-center shadow-2xl border-4 border-white/20 backdrop-blur-sm">
                         <span class="text-zinc-900 font-bold text-lg sm:text-xl md:text-2xl">AP</span>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-2 md:mb-4">
-                        My <span class="bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent">Blog</span>
+                    <h1 id="hero-title" class="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-2 md:mb-4 leading-tight">
+                        My <span class="bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 bg-clip-text text-transparent">Blog</span>
                     </h1>
-                    <p class="text-sm sm:text-base md:text-lg lg:text-xl text-zinc-200 max-w-2xl">
+                    <p id="hero-subtitle" class="text-sm sm:text-base md:text-lg lg:text-xl text-zinc-200 max-w-2xl leading-relaxed">
                         Sharing insights on full-stack development, technology trends, and my journey as a developer.
                     </p>
                 </div>
             </div>
+            <!-- Animated Background Elements -->
+            <div class="absolute top-10 right-10 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-amber-300/10 rounded-full blur-xl animate-pulse"></div>
+            <div class="absolute bottom-10 left-10 w-24 h-24 bg-gradient-to-br from-rose-500/10 to-rose-300/10 rounded-full blur-xl animate-pulse delay-1000"></div>
         </div>
 
-        <!-- Content Container with max-width and center alignment -->
+        <!-- Content Container -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-16">
-            <!-- Blog Header - Left aligned -->
-            <div class='text-xl sm:text-2xl mb-6 md:mb-8 bg-gradient-to-r from-amber-300 to-rose-600 bg-clip-text text-transparent'>
+            <!-- Blog Header -->
+            <div id="blog-header" class='text-xl sm:text-2xl mb-6 md:mb-8 bg-gradient-to-r from-amber-400 via-amber-500 to-rose-500 bg-clip-text text-transparent font-bold'>
                 {'< blog >'}
             </div>
 
             <!-- Featured Posts -->
             {featuredPosts.length > 0 && (
-                <section class="mb-8 md:mb-12">
-                    <h2 class="text-xl sm:text-2xl font-bold text-zinc-100 mb-4 md:mb-6 text-center">Featured Posts</h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-                        {featuredPosts.map((post) => (
-                            <BlogCard post={post} featured={true} client:load />
+                <section class="mb-12 md:mb-16">
+                    <h2 id="featured-title" class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-6 md:mb-8 text-center bg-gradient-to-r from-zinc-100 to-zinc-300 bg-clip-text text-transparent">
+                        ✨ Featured Posts
+                    </h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+                        {featuredPosts.map((post, index) => (
+                            <AnimatedBlogCard post={post} featured={true} index={index} client:load />
                         ))}
                     </div>
                 </section>
             )}
 
-            <!-- Recent Posts Grid -->
-            <section class="mb-8 md:mb-12">
-                <h2 class="text-xl sm:text-2xl font-bold text-zinc-100 mb-4 md:mb-6 text-center">Recent Posts</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {recentPosts.map((post) => (
-                        <BlogCard post={post} client:load />
-                    ))}
+            <!-- Recent Posts Carousel -->
+            <section class="mb-12 md:mb-16">
+                <h2 id="recent-title" class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-6 md:mb-8 text-center bg-gradient-to-r from-zinc-100 to-zinc-300 bg-clip-text text-transparent">
+                    📚 Recent Posts
+                </h2>
+                <div class="px-8">
+                    <BlogCarousel posts={recentPosts} client:load />
                 </div>
             </section>
 
-            <!-- Blog Footer - Left aligned -->
-            <div class='text-xl sm:text-2xl mt-6 md:mt-8 mb-4 bg-gradient-to-r from-amber-300 to-rose-600 bg-clip-text text-transparent'>
+            <!-- Blog Footer -->
+            <div id="blog-footer" class='text-xl sm:text-2xl mt-8 md:mt-12 mb-8 bg-gradient-to-r from-amber-400 via-amber-500 to-rose-500 bg-clip-text text-transparent font-bold'>
                 {'</ blog >'}
             </div>
         </div>
     </div>
 </Layout>
+
+<script>
+    import { gsap } from 'gsap';
+    import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hero section animations
+    gsap.fromTo('#profile-circle', 
+        { scale: 0, rotation: -180 },
+        { scale: 1, rotation: 0, duration: 1, ease: "back.out(1.7)" }
+    );
+
+    gsap.fromTo('#hero-title', 
+        { opacity: 0, y: 50 },
+        { opacity: 1, y: 0, duration: 1, delay: 0.3, ease: "power3.out" }
+    );
+
+    gsap.fromTo('#hero-subtitle', 
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 1, delay: 0.6, ease: "power3.out" }
+    );
+
+    // Section headers animation
+    gsap.fromTo('#blog-header', 
+        { opacity: 0, x: -50 },
+        { 
+            opacity: 1, 
+            x: 0, 
+            duration: 0.8, 
+            ease: "power3.out",
+            scrollTrigger: {
+                trigger: '#blog-header',
+                start: 'top 80%'
+            }
+        }
+    );
+
+    gsap.fromTo('#featured-title', 
+        { opacity: 0, scale: 0.8 },
+        { 
+            opacity: 1, 
+            scale: 1, 
+            duration: 0.8, 
+            ease: "back.out(1.7)",
+            scrollTrigger: {
+                trigger: '#featured-title',
+                start: 'top 80%'
+            }
+        }
+    );
+
+    gsap.fromTo('#recent-title', 
+        { opacity: 0, scale: 0.8 },
+        { 
+            opacity: 1, 
+            scale: 1, 
+            duration: 0.8, 
+            ease: "back.out(1.7)",
+            scrollTrigger: {
+                trigger: '#recent-title',
+                start: 'top 80%'
+            }
+        }
+    );
+
+    gsap.fromTo('#blog-footer', 
+        { opacity: 0, x: -50 },
+        { 
+            opacity: 1, 
+            x: 0, 
+            duration: 0.8, 
+            ease: "power3.out",
+            scrollTrigger: {
+                trigger: '#blog-footer',
+                start: 'top 80%'
+            }
+        }
+    );
+</script>
 
 <style>
     .line-clamp-2 {
@@ -85,5 +171,24 @@ const recentPosts = sortedPosts.slice(0, 6);
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
         overflow: hidden;
+    }
+
+    /* Custom scrollbar for carousel */
+    .carousel-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .carousel-container::-webkit-scrollbar-track {
+        background: rgba(63, 63, 70, 0.3);
+        border-radius: 3px;
+    }
+
+    .carousel-container::-webkit-scrollbar-thumb {
+        background: linear-gradient(to right, #f59e0b, #fbbf24);
+        border-radius: 3px;
+    }
+
+    .carousel-container::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(to right, #d97706, #f59e0b);
     }
 </style>

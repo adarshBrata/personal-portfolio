@@ -1,105 +1,316 @@
-import {motion} from "framer-motion";
-import {useMediaQuery} from "../util/useMediaQuery";
-import {useState} from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMediaQuery } from "../util/useMediaQuery";
+import { useState } from "react";
 
 export const NavBar = () => {
     const matches = useMediaQuery('(min-width: 768px)')
     const [toggle, setToggle] = useState(false)
+    
     function downloadResume() {
         setToggle((prev) => !prev)
     }
 
-    return (
-        <nav className='absolute drop-shadow-md backdrop-blur-sm h-[150px] w-full top-0 flex items-center justify-between py-0 font-medium px-6 md:px-16 lg:px-32'>
-            <div>
-                <motion.img animate={{ opacity: 1 }}
-                     initial={{ opacity: 0 }}
-                            className='h-[60px]'
-                     src={'/hat.png'} alt="hat"/>
-            </div>
-            <a className='decoration-0' href='/'>
-                <div className='flex px-2 text-3xl whitespace-nowrap'>
-                    Adarsh {matches &&
-                    <div className='px-2'>
-                      Brata
-                      <span
-                        className='px-2 font-bold bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'>
-                        Pal.
-                      </span>
-                    </div>
-                }
-                </div>
-            </a>
-            {matches &&
-                <div className="space-x-1.5 text-xl ml-auto">
-                    <a className='mx-2' href='/contact'>
-                        Contact
-                    </a>
-                    <a className='mx-2 bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'
-                       href='/blog'>
-                        Blog
-                    </a>
-                    <button className='mx-2 px-2 py-1'>
-                      <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>Resume</a>
-                    </button>
-                </div>
+    const navVariants = {
+        hidden: { opacity: 0, y: -50 },
+        visible: { 
+            opacity: 1, 
+            y: 0,
+            transition: {
+                duration: 0.6,
+                ease: "easeOut"
             }
-            {toggle && (
-                <motion.div
-                    animate="visible"
-                    initial="hidden"
-                    transition={{ duration: 0.2 }}
-                    className="fixed left-0 top-0  z-100 flex h-screen
-                        w-full flex-col items-center  justify-center  gap-24 bg-zinc-900 text-2xl font-bold"
+        }
+    };
+
+    const logoVariants = {
+        hidden: { opacity: 0, scale: 0, rotate: -180 },
+        visible: { 
+            opacity: 1, 
+            scale: 1, 
+            rotate: 0,
+            transition: {
+                duration: 0.8,
+                ease: "back.out(1.7)",
+                delay: 0.2
+            }
+        }
+    };
+
+    const titleVariants = {
+        hidden: { opacity: 0, x: -50 },
+        visible: { 
+            opacity: 1, 
+            x: 0,
+            transition: {
+                duration: 0.6,
+                ease: "easeOut",
+                delay: 0.4
+            }
+        }
+    };
+
+    const menuVariants = {
+        hidden: { opacity: 0, x: 50 },
+        visible: { 
+            opacity: 1, 
+            x: 0,
+            transition: {
+                duration: 0.6,
+                ease: "easeOut",
+                delay: 0.6,
+                stagger: 0.1
+            }
+        }
+    };
+
+    const mobileMenuVariants = {
+        hidden: { 
+            opacity: 0,
+            scale: 0.8,
+            y: -20
+        },
+        visible: { 
+            opacity: 1,
+            scale: 1,
+            y: 0,
+            transition: {
+                duration: 0.3,
+                ease: "easeOut"
+            }
+        },
+        exit: {
+            opacity: 0,
+            scale: 0.8,
+            y: -20,
+            transition: {
+                duration: 0.2,
+                ease: "easeIn"
+            }
+        }
+    };
+
+    const menuItemVariants = {
+        hidden: { opacity: 0, x: -100 },
+        visible: (i: number) => ({
+            opacity: 1,
+            x: 0,
+            transition: {
+                delay: i * 0.1,
+                duration: 0.5,
+                ease: "easeOut"
+            }
+        }),
+        exit: { 
+            opacity: 0, 
+            x: -100,
+            transition: {
+                duration: 0.3,
+                ease: "easeIn"
+            }
+        }
+    };
+
+    return (
+        <motion.nav 
+            variants={navVariants}
+            initial="hidden"
+            animate="visible"
+            className='absolute drop-shadow-lg backdrop-blur-md bg-zinc-900/80 border-b border-zinc-700/50 h-[150px] w-full top-0 flex items-center justify-between py-0 font-medium px-6 md:px-16 lg:px-32 z-50'
+        >
+            <motion.div variants={logoVariants}>
+                <motion.img 
+                    whileHover={{ 
+                        scale: 1.1, 
+                        rotate: 10,
+                        transition: { duration: 0.3 }
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    className='h-[60px] drop-shadow-lg'
+                    src={'/hat.png'} 
+                    alt="hat"
+                />
+            </motion.div>
+            
+            <motion.a 
+                variants={titleVariants}
+                className='decoration-0' 
+                href='/'
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+            >
+                <div className='flex px-2 text-3xl whitespace-nowrap'>
+                    <motion.span
+                        whileHover={{ 
+                            color: "#fbbf24",
+                            transition: { duration: 0.3 }
+                        }}
+                    >
+                        Adarsh
+                    </motion.span>
+                    {matches && (
+                        <div className='px-2'>
+                            <motion.span
+                                whileHover={{ 
+                                    color: "#fbbf24",
+                                    transition: { duration: 0.3 }
+                                }}
+                            >
+                                Brata
+                            </motion.span>
+                            <motion.span
+                                className='px-2 font-bold bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'
+                                whileHover={{ 
+                                    scale: 1.05,
+                                    transition: { duration: 0.3 }
+                                }}
+                            >
+                                Pal.
+                            </motion.span>
+                        </div>
+                    )}
+                </div>
+            </motion.a>
+            
+            {matches && (
+                <motion.div 
+                    variants={menuVariants}
+                    className="space-x-1.5 text-xl ml-auto"
                 >
-                    <div className="flex flex-col space-y-2 text-3xl ">
-                        <motion.a animate={{x:0}}
-                                  initial={{x:-1000}}
-                                  exit={{x:-500}}
-                                  href='/contact'>
+                    <motion.a 
+                        className='mx-2 relative'
+                        href='/contact'
+                        whileHover={{ 
+                            scale: 1.05,
+                            color: "#fbbf24"
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <span className="relative">
                             Contact
-                        </motion.a>
-                        <motion.a animate={{x:0}}
-                                  initial={{x:-1000}}
-                                  transition={{delay: 0.3}}
-                                  exit={{x:-500}}
-                                  href='/blog'
-                                  className='bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'  >
-                            Blog
-                        </motion.a>
-                        <motion.button animate={{x:0}}
-                                       initial={{x:-1000}}
-                                       transition={{delay: 0.6}}
-                                       exit={{x:-500}}
-                                       onClick={()=> downloadResume()}>
-                            <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>Resume</a>
-                        </motion.button>
-                    </div>
+                            <motion.div
+                                className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-amber-500 to-amber-300"
+                                whileHover={{ width: "100%" }}
+                                transition={{ duration: 0.3 }}
+                            />
+                        </span>
+                    </motion.a>
+                    <motion.a 
+                        className='mx-2 bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent relative'
+                        href='/blog'
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        Blog
+                    </motion.a>
+                    <motion.button 
+                        className='mx-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 rounded-full font-semibold shadow-lg'
+                        whileHover={{ 
+                            scale: 1.05,
+                            boxShadow: "0 10px 25px rgba(245, 158, 11, 0.3)"
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>
+                            Resume
+                        </a>
+                    </motion.button>
                 </motion.div>
             )}
+            
+            <AnimatePresence>
+                {toggle && (
+                    <motion.div
+                        variants={mobileMenuVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        className="fixed left-0 top-0 z-40 flex h-screen w-full flex-col items-center justify-center gap-12 bg-zinc-900/95 backdrop-blur-lg text-2xl font-bold"
+                    >
+                        <div className="flex flex-col space-y-8 text-3xl">
+                            <motion.a 
+                                custom={0}
+                                variants={menuItemVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                href='/contact'
+                                className="relative"
+                                whileHover={{ 
+                                    scale: 1.1,
+                                    color: "#fbbf24"
+                                }}
+                                onClick={() => setToggle(false)}
+                            >
+                                Contact
+                            </motion.a>
+                            <motion.a 
+                                custom={1}
+                                variants={menuItemVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                href='/blog'
+                                className='bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent'
+                                whileHover={{ scale: 1.1 }}
+                                onClick={() => setToggle(false)}
+                            >
+                                Blog
+                            </motion.a>
+                            <motion.button 
+                                custom={2}
+                                variants={menuItemVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                onClick={() => downloadResume()}
+                                whileHover={{ scale: 1.1 }}
+                                className="bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 px-6 py-3 rounded-full font-semibold"
+                            >
+                                <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>
+                                    Resume
+                                </a>
+                            </motion.button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {!matches && (
-                <div onClick={()=> setToggle(prev => !prev)}
-                     className='flex flex-col space-y-1.5 cursor-pointer z-20'
+                <motion.div 
+                    onClick={() => setToggle(prev => !prev)}
+                    className='flex flex-col space-y-1.5 cursor-pointer z-50 p-2'
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                 >
                     <motion.span
-                        animate={{ rotateZ: toggle ? 45 : 0, y: toggle ? 8 : 0 }}
-                        className='block h-0.5 w-8 bg-zinc-300'>
-                    </motion.span>
+                        animate={{ 
+                            rotateZ: toggle ? 45 : 0, 
+                            y: toggle ? 8 : 0,
+                            backgroundColor: toggle ? "#fbbf24" : "#d4d4d8"
+                        }}
+                        transition={{ duration: 0.3 }}
+                        className='block h-0.5 w-8 bg-zinc-300 rounded-full'
+                    />
                     <motion.span
-                        animate={{ width: toggle ? 0 : 24 }}
-                        className='block h-0.5 w-6 bg-gradient-to-r from-amber-500 to-amber-300'>
-                    </motion.span>
+                        animate={{ 
+                            width: toggle ? 0 : 24,
+                            opacity: toggle ? 0 : 1
+                        }}
+                        transition={{ duration: 0.3 }}
+                        className='block h-0.5 w-6 bg-gradient-to-r from-amber-500 to-amber-300 rounded-full'
+                    />
                     <motion.span
                         animate={{
                             rotateZ: toggle ? -45 : 0,
                             y: toggle ? -8 : 0,
                             width: toggle ? 32 : 16,
+                            backgroundColor: toggle ? "#fbbf24" : "#d4d4d8"
                         }}
-                        className='block h-0.5 w-4 bg-zinc-300'>
-                    </motion.span>
-                </div>
+                        transition={{ duration: 0.3 }}
+                        className='block h-0.5 w-4 bg-zinc-300 rounded-full'
+                    />
+                </motion.div>
             )}
-        </nav>
+        </motion.nav>
     )
 }
