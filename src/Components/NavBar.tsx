@@ -132,6 +132,7 @@ export const NavBar = () => {
             >
                 <div className='flex px-2 text-3xl whitespace-nowrap'>
                     <motion.span
+                        className={matches ? 'text-zinc-100' : 'bg-gradient-to-r from-amber-500 to-amber-300 bg-clip-text text-transparent font-bold'}
                         whileHover={{ 
                             color: "#fbbf24",
                             transition: { duration: 0.2 }
@@ -182,7 +183,7 @@ export const NavBar = () => {
                         Blog
                     </motion.a>
                     <motion.button 
-                        className='px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 rounded-full font-semibold shadow-lg text-sm'
+                        className='px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-300 text-white rounded-full font-semibold shadow-lg text-sm'
                         whileHover={{ 
                             scale: 1.02,
                             boxShadow: "0 8px 20px rgba(245, 158, 11, 0.25)"
@@ -242,7 +243,7 @@ export const NavBar = () => {
                                 exit="exit"
                                 onClick={() => downloadResume()}
                                 whileHover={{ scale: 1.05 }}
-                                className="bg-gradient-to-r from-amber-500 to-amber-300 text-zinc-900 px-6 py-3 rounded-full font-semibold text-left"
+                                className="bg-gradient-to-r from-amber-500 to-amber-300 text-white px-6 py-3 rounded-full font-semibold text-left"
                             >
                                 <a href={'/AdarshBrataPal.pdf'} download={'Adarsh-Resume'} target={'_blank'}>
                                     Resume
