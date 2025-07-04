@@ -30,7 +30,7 @@ export const NavBar = () => {
             rotate: 0,
             transition: {
                 duration: 0.8,
-                ease: "back.out(1.7)",
+                ease: "backOut",
                 delay: 0.2
             }
         }
