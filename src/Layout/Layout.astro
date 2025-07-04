@@ -13,12 +13,12 @@ import '../styles/global.css'
     <meta name="generator" content={Astro.generator} />
     <title>{TITLE}</title>
 </head>
-<body class="bg-zinc-900 text-zinc-300 h-screen w-screen overflow-hidden">
-    <main class="grid grid-cols-1 grid-rows-[150px,_1fr,_50px] h-full">
-        <div id="navbar" class="max-w-[1080px] max-h-[150px]">
+<body class="bg-zinc-900 text-zinc-300 min-h-screen">
+    <main class="grid grid-cols-1 grid-rows-[150px,_1fr,_50px] min-h-screen">
+        <div id="navbar" class="max-w-full max-h-[150px]">
             <NavBar client:load/>
         </div>
-        <section id="body" class="max-w-[1080px] md:overflow-hidden overflow-scroll">
+        <section id="body" class="max-w-full overflow-y-auto">
             <slot/>
         </section>
         <section id="footer" class="max-w-full">

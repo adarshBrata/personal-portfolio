@@ -15,7 +15,7 @@ export const BlogCard = ({ post, featured = false }: BlogCardProps) => {
 
   if (featured) {
     return (
-      <article className="relative overflow-hidden rounded-lg bg-zinc-800 shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <article className="relative overflow-hidden rounded-lg bg-zinc-800 shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
         <div className="aspect-video overflow-hidden">
           <img
             src={heroImage || 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&dpr=1'}
@@ -23,8 +23,8 @@ export const BlogCard = ({ post, featured = false }: BlogCardProps) => {
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
         </div>
-        <div className="p-6">
-          <div className="flex flex-wrap gap-2 mb-3">
+        <div className="p-4 sm:p-6 flex flex-col h-full">
+          <div className="flex flex-wrap gap-1 sm:gap-2 mb-2 sm:mb-3">
             {tags.map((tag) => (
               <span
                 key={tag}
@@ -34,15 +34,15 @@ export const BlogCard = ({ post, featured = false }: BlogCardProps) => {
               </span>
             ))}
           </div>
-          <h2 className="text-xl font-bold text-zinc-100 mb-2 hover:text-amber-300 transition-colors">
-            <a href={`/blog/${post.slug}`}>{title}</a>
+          <h2 className="text-lg sm:text-xl font-bold text-zinc-100 mb-2 hover:text-amber-300 transition-colors flex-grow">
+            <a href={`/blog/${post.slug}`} className="block">{title}</a>
           </h2>
-          <p className="text-zinc-300 text-sm mb-4 line-clamp-3">{description}</p>
-          <div className="flex items-center justify-between">
-            <time className="text-zinc-400 text-sm">{formattedDate}</time>
+          <p className="text-zinc-300 text-sm mb-3 sm:mb-4 line-clamp-3 flex-grow">{description}</p>
+          <div className="flex items-center justify-between mt-auto">
+            <time className="text-zinc-400 text-xs sm:text-sm">{formattedDate}</time>
             <a
               href={`/blog/${post.slug}`}
-              className="text-amber-300 hover:text-amber-400 text-sm font-medium transition-colors"
+              className="text-amber-300 hover:text-amber-400 text-xs sm:text-sm font-medium transition-colors"
             >
               Read more →
             </a>
@@ -53,7 +53,7 @@ export const BlogCard = ({ post, featured = false }: BlogCardProps) => {
   }
 
   return (
-    <article className="bg-zinc-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
+    <article className="bg-zinc-800 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
       <div className="aspect-video overflow-hidden">
         <img
           src={heroImage || 'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&dpr=1'}
@@ -61,7 +61,7 @@ export const BlogCard = ({ post, featured = false }: BlogCardProps) => {
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
       </div>
-      <div className="p-4">
+      <div className="p-3 sm:p-4 flex flex-col flex-grow">
         <div className="flex flex-wrap gap-1 mb-2">
           {tags.slice(0, 2).map((tag) => (
             <span
@@ -72,11 +72,11 @@ export const BlogCard = ({ post, featured = false }: BlogCardProps) => {
             </span>
           ))}
         </div>
-        <h3 className="text-lg font-semibold text-zinc-100 mb-2 hover:text-amber-300 transition-colors">
-          <a href={`/blog/${post.slug}`}>{title}</a>
+        <h3 className="text-base sm:text-lg font-semibold text-zinc-100 mb-2 hover:text-amber-300 transition-colors flex-grow">
+          <a href={`/blog/${post.slug}`} className="block">{title}</a>
         </h3>
-        <p className="text-zinc-400 text-sm mb-3 line-clamp-2">{description}</p>
-        <div className="flex items-center justify-between">
+        <p className="text-zinc-400 text-sm mb-3 line-clamp-2 flex-grow">{description}</p>
+        <div className="flex items-center justify-between mt-auto">
           <time className="text-zinc-500 text-xs">{formattedDate}</time>
           <a
             href={`/blog/${post.slug}`}
