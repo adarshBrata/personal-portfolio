@@ -204,3 +204,4 @@ export const AnimatedBlogCard = ({ post, featured = false, index }: AnimatedBlog
       </div>
     </motion.article>
   );
+};
