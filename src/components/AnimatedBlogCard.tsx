@@ -45,6 +45,12 @@ export const AnimatedBlogCard = ({ post, featured = false, index }: AnimatedBlog
     }
   };
 
+  const handleCardClick = () => {
+    if (typeof window !== 'undefined') {
+      window.location.href = `/blog/${post.slug}`;
+    }
+  };
+
   if (featured) {
     return (
       <motion.article
@@ -53,7 +59,7 @@ export const AnimatedBlogCard = ({ post, featured = false, index }: AnimatedBlog
         animate="visible"
         whileHover="hover"
         className="relative overflow-hidden rounded-xl bg-gradient-to-br from-zinc-800/90 to-zinc-900/90 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-shadow duration-300 h-full border border-zinc-700/50 group cursor-pointer"
-        onClick={() => window.location.href = `/blog/${post.slug}`}
+        onClick={handleCardClick}
       >
         <motion.div 
           className="aspect-video overflow-hidden relative"
@@ -119,6 +125,7 @@ export const AnimatedBlogCard = ({ post, featured = false, index }: AnimatedBlog
           >
             <time className="text-zinc-400 text-sm font-medium">{formattedDate}</time>
             <motion.a
+              href={`/blog/${post.slug}`}
               className="text-amber-400 hover:text-amber-300 text-sm font-semibold transition-all duration-300 group-hover:translate-x-1 transform flex items-center gap-1"
               whileHover={{ x: 4 }}
             >
@@ -137,7 +144,7 @@ export const AnimatedBlogCard = ({ post, featured = false, index }: AnimatedBlog
       animate="visible"
       whileHover="hover"
       className="bg-gradient-to-br from-zinc-800/80 to-zinc-900/80 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col border border-zinc-700/50 group cursor-pointer"
-      onClick={() => window.location.href = `/blog/${post.slug}`}
+      onClick={handleCardClick}
     >
       <motion.div 
         className="aspect-video overflow-hidden relative"
@@ -195,6 +202,7 @@ export const AnimatedBlogCard = ({ post, featured = false, index }: AnimatedBlog
         >
           <time className="text-zinc-500 text-xs font-medium">{formattedDate}</time>
           <motion.a
+            href={`/blog/${post.slug}`}
             className="text-amber-400 hover:text-amber-300 text-xs font-semibold transition-all duration-300 group-hover:translate-x-1 transform"
             whileHover={{ x: 2 }}
           >
