@@ -110,7 +110,7 @@ export const NavBar = () => {
             variants={navVariants}
             initial="hidden"
             animate="visible"
-            className='absolute drop-shadow-lg backdrop-blur-md bg-zinc-900/80 border-b border-zinc-700/50 h-[150px] w-full top-0 flex items-center justify-between py-0 font-medium px-6 md:px-16 lg:px-32 z-50'
+            className='absolute drop-shadow-lg backdrop-blur-md bg-zinc-900/80 border-b border-zinc-700/50 h-[120px] w-full top-0 flex items-center justify-between py-0 font-medium px-4 md:px-12 lg:px-24 z-50'
         >
             <motion.div variants={logoVariants}>
                 <motion.img 
@@ -118,7 +118,7 @@ export const NavBar = () => {
                         scale: 1.05,
                         transition: { duration: 0.2 }
                     }}
-                    className='h-[60px] drop-shadow-lg'
+                    className='h-[50px] drop-shadow-lg'
                     src={'/hat.png'} 
                     alt="hat"
                 />
